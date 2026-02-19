@@ -1,0 +1,28 @@
+<div class="wrap">
+  <div class="card">
+    <h2>Initialize IMS</h2>
+    <p>First-time setup: creates roles + first Admin user.</p>
+
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <label>Setup Key</label>
+      <input formControlName="setupKey" placeholder="X-Setup-Key" />
+
+      <label>Admin Email</label>
+      <input formControlName="email" />
+
+      <label>Admin Username</label>
+      <input formControlName="userName" />
+
+      <label>Admin Password</label>
+      <input type="password" formControlName="password" />
+
+      <div class="error" *ngIf="error">{{ error }}</div>
+
+      <button type="submit" [disabled]="loading || form.invalid">
+        {{ loading ? 'Initializing...' : 'Initialize' }}
+      </button>
+
+      <a class="link" routerLink="/login">Go to Login</a>
+    </form>
+  </div>
+</div>

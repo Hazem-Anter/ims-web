@@ -1,0 +1,34 @@
+<div class="table-card">
+  <div class="head">
+    <h3>{{ title }}</h3>
+    <div class="tools">
+      <input [(ngModel)]="search" (keyup.enter)="onSearch()" placeholder="Search..." />
+      <button (click)="onSearch()">Search</button>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th *ngFor="let c of columns">{{ c.header }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let row of items">
+        <td *ngFor="let c of columns">{{ $any(row)[c.key] }}</td>
+      </tr>
+      <tr *ngIf="items.length === 0">
+        <td [attr.colspan]="columns.length" class="empty">No data</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="footer">
+    <div>Total: {{ totalCount }}</div>
+    <div class="pager">
+      <button (click)="prev()">Prev</button>
+      <span>Page {{ page }}</span>
+      <button (click)="next()">Next</button>
+    </div>
+  </div>
+</div>

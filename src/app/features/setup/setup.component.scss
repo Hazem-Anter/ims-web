@@ -1,0 +1,7 @@
+.wrap { height:100vh; display:flex; justify-content:center; align-items:center; background:#f6f7fb; }
+.card { width:420px; background:#fff; border:1px solid #eee; border-radius:12px; padding:24px; }
+label { display:block; margin-top:12px; font-weight:600; }
+input { width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; margin-top:6px; }
+button { margin-top:16px; width:100%; padding:10px; border-radius:8px; border:none; background:#1a5ad7; color:#fff; cursor:pointer; }
+.error { margin-top:12px; color:#b00020; }
+.link { display:block; text-align:center; margin-top:12px; }

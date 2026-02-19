@@ -1,0 +1,10 @@
+<app-table
+  title="Users (Admin)"
+  [columns]="columns"
+  [items]="rows"
+  [totalCount]="totalCount"
+  [page]="page"
+  [pageSize]="pageSize"
+  (pageChange)="onPage($event)"
+  (searchChange)="onSearch($event)">
+</app-table>
