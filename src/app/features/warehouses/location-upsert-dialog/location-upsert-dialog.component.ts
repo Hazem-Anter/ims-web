@@ -1,4 +1,4 @@
-import { Component, Inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -24,12 +24,13 @@ type DialogData =
     MatInputModule
   ],
   templateUrl: './location-upsert-dialog.component.html',
-  styleUrl: './location-upsert-dialog.component.scss'
+  styleUrl: './location-upsert-dialog.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LocationUpsertDialogComponent {
   form: FormGroup;
-  loading = false;
-  error = '';
+  readonly loading = signal(false);
+  readonly error = signal('');
 
   get isEdit() { return this.data.mode === 'edit'; }
 
@@ -49,30 +50,30 @@ export class LocationUpsertDialogComponent {
   }
 
   private loadForEdit(warehouseId: number, locationId: number) {
-    this.loading = true;
+    this.loading.set(true);
     this.warehouses.getLocation(warehouseId, locationId).subscribe({
-      next: (loc) => { this.form.patchValue(loc); this.loading = false; },
-      error: (e) => { this.error = e?.message ?? 'Failed to load location.'; this.loading = false; }
+      next: (loc) => { this.form.patchValue(loc); this.loading.set(false); },
+      error: (e) => { this.error.set(e?.message ?? 'Failed to load location.'); this.loading.set(false); }
     });
   }
 
   save() {
     if (this.form.invalid) return;
-    this.loading = true;
-    this.error = '';
+    this.loading.set(true);
+    this.error.set('');
     const code = String(this.form.getRawValue().code ?? '').trim();
 
     if (this.data.mode === 'edit') {
       this.warehouses.updateLocation(this.data.warehouseId, this.data.locationId, code).subscribe({
-        next: () => { this.loading = false; this.ref.close(true); },
-        error: (e) => { this.loading = false; this.error = e?.message ?? 'Save failed.'; }
+        next: () => { this.loading.set(false); this.ref.close(true); },
+        error: (e) => { this.loading.set(false); this.error.set(e?.message ?? 'Save failed.'); }
       });
       return;
     }
 
     this.warehouses.createLocation(this.data.warehouseId, code).subscribe({
-      next: () => { this.loading = false; this.ref.close(true); },
-      error: (e) => { this.loading = false; this.error = e?.message ?? 'Save failed.'; }
+      next: () => { this.loading.set(false); this.ref.close(true); },
+      error: (e) => { this.loading.set(false); this.error.set(e?.message ?? 'Save failed.'); }
     });
   }
 

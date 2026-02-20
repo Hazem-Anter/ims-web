@@ -14,10 +14,20 @@ h2 { margin: 0; font-size: 26px; }
 }
 .filter-actions { display: flex; gap: 8px; }
 
-.mat-table { border-radius: 12px; overflow: hidden; }
+.mat-table {
+  background: var(--mat-sys-surface);
+  border: 1px solid color-mix(in srgb, var(--mat-sys-primary) 20%, transparent);
+  border-radius: 12px;
+  overflow: hidden;
+}
 .title { font-weight: 600; }
 .sub { color: var(--mat-sys-outline); font-size: 12px; }
 .empty { text-align: center; padding: 14px; color: var(--mat-sys-outline); }
 .error { color: var(--mat-sys-error); }
 
 mat-paginator { align-self: flex-end; }
+
+@media (max-width: 960px) {
+  .filter-actions { justify-content: flex-start; }
+  mat-paginator { align-self: stretch; }
+}

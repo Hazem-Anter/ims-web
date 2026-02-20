@@ -1,6 +1,6 @@
 <h2 mat-dialog-title>Manage user</h2>
 
-<div mat-dialog-content class="dialog-body" *ngIf="user">
+<div mat-dialog-content class="dialog-body" *ngIf="user() as user">
   <div class="summary">
     <div>
       <div class="label">Email</div>
@@ -20,7 +20,7 @@
   <section>
     <div class="section-head">
       <h4>Roles</h4>
-      <button mat-button color="primary" (click)="toggleActive()">
+      <button mat-button color="primary" (click)="toggleActive()" [disabled]="actionBusy()">
         <mat-icon>{{ user.lockoutEnd ? 'play_arrow' : 'pause' }}</mat-icon>
         {{ user.lockoutEnd ? 'Activate' : 'Deactivate' }}
       </button>
@@ -29,7 +29,7 @@
     <mat-chip-set>
       <mat-chip *ngFor="let r of user.roles" color="primary" selected (removed)="removeRole(r)">
         {{ r }}
-        <button matChipRemove mat-icon-button>
+        <button matChipRemove mat-icon-button aria-label="Remove role" [disabled]="actionBusy()">
           <mat-icon>close</mat-icon>
         </button>
       </mat-chip>
@@ -40,11 +40,11 @@
       <mat-form-field appearance="outline">
         <mat-label>Add role</mat-label>
         <mat-select formControlName="role">
-          <mat-option *ngFor="let r of roles" [value]="r">{{ r }}</mat-option>
+          <mat-option *ngFor="let r of roles()" [value]="r">{{ r }}</mat-option>
         </mat-select>
       </mat-form-field>
-      <button mat-raised-button color="primary" type="button" (click)="addRole()" [disabled]="roleForm.invalid">
-        Add
+      <button mat-raised-button color="primary" type="button" (click)="addRole()" [disabled]="roleForm.invalid || actionBusy()">
+        {{ actionBusy() ? 'Working...' : 'Add' }}
       </button>
     </form>
   </section>
@@ -58,13 +58,13 @@
         <mat-label>New password</mat-label>
         <input matInput type="password" formControlName="password" />
       </mat-form-field>
-      <button mat-raised-button color="primary" type="button" (click)="resetPassword()" [disabled]="passwordForm.invalid">
-        Reset
+      <button mat-raised-button color="primary" type="button" (click)="resetPassword()" [disabled]="passwordForm.invalid || actionBusy()">
+        {{ actionBusy() ? 'Working...' : 'Reset' }}
       </button>
     </form>
   </section>
 
-  <div class="error" *ngIf="error">{{ error }}</div>
+  <div class="error" *ngIf="error()">{{ error() }}</div>
 </div>
 
 <div mat-dialog-actions align="end">

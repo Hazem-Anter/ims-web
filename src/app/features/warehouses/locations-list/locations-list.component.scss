@@ -11,9 +11,25 @@
 }
 .filter-actions { display: flex; gap: 8px; }
 
-.mat-table { border-radius: 12px; overflow: hidden; }
+.mat-table {
+  background: var(--mat-sys-surface);
+  border: 1px solid color-mix(in srgb, var(--mat-sys-primary) 20%, transparent);
+  border-radius: 12px;
+  overflow: hidden;
+}
 .title { font-weight: 600; }
 .sub { color: var(--mat-sys-outline); font-size: 12px; }
 .actions { justify-content: flex-end; }
 .empty { text-align: center; padding: 16px; color: var(--mat-sys-outline); }
 .error { color: var(--mat-sys-error); }
+
+@media (max-width: 960px) {
+  .head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .filter-actions {
+    justify-content: flex-start;
+  }
+}

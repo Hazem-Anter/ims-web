@@ -12,6 +12,12 @@ export class ErrorInterceptor implements HttpInterceptor {
   intercept(req: HttpRequest<any>, next: HttpHandler) {
     return next.handle(req).pipe(
       catchError((err: HttpErrorResponse) => {
+        const isLoginRequest = req.url.endsWith('/api/auth/login');
+
+        if (isLoginRequest && (err.status === 400 || err.status === 401)) {
+          return throwError(() => new Error('Invalid email or password.'));
+        }
+
         if (err.status === 401 && !req.url.endsWith('/api/setup/initialize')) {
           this.auth.logout();
           this.router.navigateByUrl('/login');

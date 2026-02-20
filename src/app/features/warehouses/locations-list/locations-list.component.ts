@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
@@ -33,58 +33,62 @@ import { LocationUpsertDialogComponent } from '../location-upsert-dialog/locatio
     MatTooltipModule
   ],
   templateUrl: './locations-list.component.html',
-  styleUrl: './locations-list.component.scss'
+  styleUrl: './locations-list.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LocationsListComponent {
-  warehouseId!: number;
-  warehouseName = '';
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly fb = inject(FormBuilder);
+  private readonly warehouses = inject(WarehousesService);
+  private readonly dialog = inject(MatDialog);
+  private activeLoadId = 0;
 
-  loading = false;
-  error = '';
+  readonly warehouseId = Number(this.route.snapshot.paramMap.get('id'));
+  readonly warehouseName = signal('');
 
-  rows: LocationListItemDto[] = [];
-  displayedColumns = ['code', 'status', 'actions'];
+  readonly loading = signal(false);
+  readonly error = signal('');
+
+  readonly rows = signal<LocationListItemDto[]>([]);
+  readonly displayedColumns = ['code', 'status', 'actions'];
 
   filterForm: FormGroup;
 
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private fb: FormBuilder,
-    private warehouses: WarehousesService,
-    private dialog: MatDialog
-  ) {
+  constructor() {
     this.filterForm = this.fb.group({
       search: [''],
       isActive: [null]
     });
 
-    this.warehouseId = Number(this.route.snapshot.paramMap.get('id'));
     this.loadWarehouse();
     this.load();
   }
 
   loadWarehouse() {
     this.warehouses.getById(this.warehouseId).subscribe({
-      next: (w) => this.warehouseName = w.name,
+      next: (w) => this.warehouseName.set(w.name),
       error: () => {}
     });
   }
 
   load() {
-    this.loading = true;
-    this.error = '';
+    const requestId = ++this.activeLoadId;
+    this.loading.set(true);
+    this.error.set('');
 
     const { search, isActive } = this.filterForm.getRawValue();
 
     this.warehouses.listLocations(this.warehouseId, search, isActive).subscribe({
       next: (rows) => {
-        this.rows = rows;
-        this.loading = false;
+        if (requestId !== this.activeLoadId) return;
+        this.rows.set(rows);
+        this.loading.set(false);
       },
       error: (e) => {
-        this.error = e?.message ?? 'Failed to load locations.';
-        this.loading = false;
+        if (requestId !== this.activeLoadId) return;
+        this.error.set(e?.message ?? 'Failed to load locations.');
+        this.loading.set(false);
       }
     });
   }
@@ -115,21 +119,25 @@ export class LocationsListComponent {
   }
 
   toggleActive(row: LocationListItemDto) {
-    this.loading = true;
+    this.loading.set(true);
     const req = row.isActive
       ? this.warehouses.deactivateLocation(this.warehouseId, row.id)
       : this.warehouses.activateLocation(this.warehouseId, row.id);
 
     req.subscribe({
-      next: () => { this.loading = false; this.load(); },
+      next: () => { this.loading.set(false); this.load(); },
       error: (e) => {
-        this.loading = false;
-        this.error = e?.message ?? 'Operation failed.';
+        this.loading.set(false);
+        this.error.set(e?.message ?? 'Operation failed.');
       }
     });
   }
 
   back() {
     this.router.navigate(['/warehouses']);
+  }
+
+  trackLocation(_: number, row: LocationListItemDto) {
+    return row.id;
   }
 }

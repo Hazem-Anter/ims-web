@@ -4,8 +4,8 @@
 
 .sidebar {
   width: 240px;
-  background: #ffffff;
-  border-right: 1px solid #e0e0e0;
+  background: var(--mat-sys-surface);
+  border-right: 1px solid color-mix(in srgb, var(--mat-sys-primary) 20%, transparent);
 }
 
 .logo {
@@ -15,11 +15,16 @@
   padding: 16px;
   font-size: 20px;
   font-weight: bold;
+  color: var(--mat-sys-primary);
 }
 
 .toolbar {
-  background: white;
-  border-bottom: 1px solid #e0e0e0;
+  background: color-mix(in srgb, var(--mat-sys-primary) 5%, var(--mat-sys-surface));
+  border-bottom: 1px solid color-mix(in srgb, var(--mat-sys-primary) 20%, transparent);
+}
+
+.menu-toggle {
+  display: none;
 }
 
 .spacer {
@@ -32,10 +37,20 @@
 
 .content {
   padding: 24px;
-  background: #f4f6f8;
+  background: color-mix(in srgb, var(--mat-sys-primary) 6%, var(--mat-sys-surface));
   min-height: calc(100vh - 64px);
 }
 
 .active {
-  background: #e3f2fd;
+  background: color-mix(in srgb, var(--mat-sys-primary) 18%, transparent);
+}
+
+@media (max-width: 960px) {
+  .menu-toggle {
+    display: inline-flex;
+  }
+
+  .content {
+    padding: 16px;
+  }
 }

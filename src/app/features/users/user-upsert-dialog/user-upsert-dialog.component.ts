@@ -1,4 +1,4 @@
-import { Component, Inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -21,19 +21,20 @@ import { UsersService } from '../users.service';
     MatSelectModule
   ],
   templateUrl: './user-upsert-dialog.component.html',
-  styleUrl: './user-upsert-dialog.component.scss'
+  styleUrl: './user-upsert-dialog.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class UserUpsertDialogComponent {
   form: FormGroup;
-  loading = false;
-  error = '';
-  roles: string[] = [];
+  readonly loading = signal(false);
+  readonly error = signal('');
+  readonly roles = signal<string[]>([]);
 
   constructor(
     private fb: FormBuilder,
     private users: UsersService,
     private ref: MatDialogRef<UserUpsertDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any
+    @Inject(MAT_DIALOG_DATA) public data: Record<string, never> | null
   ) {
     this.form = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -46,20 +47,20 @@ export class UserUpsertDialogComponent {
 
   private loadRoles() {
     this.users.listRoles().subscribe({
-      next: (r) => this.roles = r,
+      next: (r) => this.roles.set(r),
       error: () => {}
     });
   }
 
   save() {
     if (this.form.invalid) return;
-    this.loading = true;
-    this.error = '';
+    this.loading.set(true);
+    this.error.set('');
 
     const { email, password, roles } = this.form.getRawValue();
     this.users.create({ email: email.trim(), password, roles }).subscribe({
-      next: () => { this.loading = false; this.ref.close(true); },
-      error: (e) => { this.error = e?.message ?? 'Create failed.'; this.loading = false; }
+      next: () => { this.loading.set(false); this.ref.close(true); },
+      error: (e) => { this.error.set(e?.message ?? 'Create failed.'); this.loading.set(false); }
     });
   }
 

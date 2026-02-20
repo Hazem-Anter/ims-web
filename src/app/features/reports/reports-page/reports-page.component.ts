@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 
@@ -33,48 +33,54 @@ import { PagedResult } from '../../../shared/utils/paging';
     MatIconModule
   ],
   templateUrl: './reports-page.component.html',
-  styleUrl: './reports-page.component.scss'
+  styleUrl: './reports-page.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ReportsPageComponent {
-  warehouses: WarehouseLookupDto[] = [];
-  products: ProductLookupDto[] = [];
+  private readonly fb = inject(FormBuilder);
+  private readonly reports = inject(ReportsService);
+  private readonly lookups = inject(LookupsService);
+
+  readonly warehouses = signal<WarehouseLookupDto[]>([]);
+  readonly products = signal<ProductLookupDto[]>([]);
+  readonly selectedTab = signal(0);
 
   // stock movements
   movementsForm: FormGroup;
-  movementRows: StockMovementDto[] = [];
-  movementColumns = ['createAt', 'type', 'qty', 'warehouse', 'location', 'ref'];
-  mvPage = 1;
-  mvPageSize = 50;
-  mvTotal = 0;
-  mvLoading = false;
-  mvError = '';
+  readonly movementRows = signal<StockMovementDto[]>([]);
+  readonly movementColumns = ['createAt', 'type', 'qty', 'warehouse', 'location', 'ref'];
+  readonly mvPage = signal(1);
+  readonly mvPageSize = signal(50);
+  readonly mvTotal = signal(0);
+  readonly mvLoading = signal(false);
+  readonly mvError = signal('');
 
   // low stock
   lowForm: FormGroup;
-  lowRows: LowStockItemDto[] = [];
-  lowColumns = ['product', 'warehouse', 'location', 'qty', 'shortage'];
-  lowLoading = false;
-  lowError = '';
+  readonly lowRows = signal<LowStockItemDto[]>([]);
+  readonly lowColumns = ['product', 'warehouse', 'location', 'qty', 'shortage'];
+  readonly lowLoading = signal(false);
+  readonly lowError = signal('');
 
   // dead stock
   deadForm: FormGroup;
-  deadRows: DeadStockItemDto[] = [];
-  deadColumns = ['product', 'warehouse', 'qty', 'lastMovement', 'days'];
-  deadLoading = false;
-  deadError = '';
+  readonly deadRows = signal<DeadStockItemDto[]>([]);
+  readonly deadColumns = ['product', 'warehouse', 'qty', 'lastMovement', 'days'];
+  readonly deadLoading = signal(false);
+  readonly deadError = signal('');
 
   // valuation
   valuationForm: FormGroup;
-  valRows: StockValuationItemDto[] = [];
-  valColumns = ['product', 'warehouse', 'location', 'qty', 'unitCost', 'totalValue'];
-  valLoading = false;
-  valError = '';
+  readonly valRows = signal<StockValuationItemDto[]>([]);
+  readonly valColumns = ['product', 'warehouse', 'location', 'qty', 'unitCost', 'totalValue'];
+  readonly valLoading = signal(false);
+  readonly valError = signal('');
 
-  constructor(
-    private fb: FormBuilder,
-    private reports: ReportsService,
-    private lookups: LookupsService
-  ) {
+  private lowLoaded = false;
+  private deadLoaded = false;
+  private valuationLoaded = false;
+
+  constructor() {
     const today = new Date();
     const weekAgo = new Date(today);
     weekAgo.setDate(today.getDate() - 7);
@@ -104,14 +110,27 @@ export class ReportsPageComponent {
 
     this.loadLookups();
     this.loadMovements();
-    this.loadLowStock();
-    this.loadDeadStock();
-    this.loadValuation();
+  }
+
+  onTabChange(index: number) {
+    this.selectedTab.set(index);
+
+    if (index === 1 && !this.lowLoaded) {
+      this.loadLowStock();
+    }
+
+    if (index === 2 && !this.deadLoaded) {
+      this.loadDeadStock();
+    }
+
+    if (index === 3 && !this.valuationLoaded) {
+      this.loadValuation();
+    }
   }
 
   private loadLookups() {
-    this.lookups.warehouses(true).subscribe({ next: (w) => this.warehouses = w });
-    this.lookups.products(undefined, true, 200).subscribe({ next: (p) => this.products = p });
+    this.lookups.warehouses(true).subscribe({ next: (w) => this.warehouses.set(w) });
+    this.lookups.products(undefined, true, 200).subscribe({ next: (p) => this.products.set(p) });
   }
 
   // Stock movements
@@ -124,31 +143,34 @@ export class ReportsPageComponent {
     const fromIso = fromUtc ? new Date(fromUtc).toISOString() : defaultFrom.toISOString();
     const toIso = toUtc ? new Date(toUtc).toISOString() : today.toISOString();
 
-    this.mvLoading = true;
-    this.mvError = '';
+    this.mvLoading.set(true);
+    this.mvError.set('');
 
     this.reports.stockMovements({
       fromUtc: fromIso,
       toUtc: toIso,
       warehouseId,
       productId,
-      page: this.mvPage,
-      pageSize: this.mvPageSize
+      page: this.mvPage(),
+      pageSize: this.mvPageSize()
     }).subscribe({
       next: (res: PagedResult<StockMovementDto>) => {
-        this.movementRows = res.items;
-        this.mvTotal = res.totalCount;
-        this.mvPage = res.page;
-        this.mvPageSize = res.pageSize;
-        this.mvLoading = false;
+        this.movementRows.set(res.items);
+        this.mvTotal.set(res.totalCount);
+        this.mvPage.set(res.page);
+        this.mvPageSize.set(res.pageSize);
+        this.mvLoading.set(false);
       },
-      error: (e) => { this.mvError = e?.message ?? 'Failed to load movements.'; this.mvLoading = false; }
+      error: (e) => {
+        this.mvError.set(e?.message ?? 'Failed to load movements.');
+        this.mvLoading.set(false);
+      }
     });
   }
 
   mvPageChange(ev: PageEvent) {
-    this.mvPage = ev.pageIndex + 1;
-    this.mvPageSize = ev.pageSize;
+    this.mvPage.set(ev.pageIndex + 1);
+    this.mvPageSize.set(ev.pageSize);
     this.loadMovements();
   }
 
@@ -162,18 +184,25 @@ export class ReportsPageComponent {
       warehouseId: null,
       productId: null
     });
-    this.mvPage = 1;
+    this.mvPage.set(1);
     this.loadMovements();
   }
 
   // Low stock
   loadLowStock() {
     const { warehouseId, productId } = this.lowForm.getRawValue();
-    this.lowLoading = true;
-    this.lowError = '';
+    this.lowLoading.set(true);
+    this.lowError.set('');
     this.reports.lowStock(warehouseId, productId).subscribe({
-      next: (rows) => { this.lowRows = rows; this.lowLoading = false; },
-      error: (e) => { this.lowError = e?.message ?? 'Failed to load low stock.'; this.lowLoading = false; }
+      next: (rows) => {
+        this.lowRows.set(rows);
+        this.lowLoaded = true;
+        this.lowLoading.set(false);
+      },
+      error: (e) => {
+        this.lowError.set(e?.message ?? 'Failed to load low stock.');
+        this.lowLoading.set(false);
+      }
     });
   }
 
@@ -185,11 +214,18 @@ export class ReportsPageComponent {
   // Dead stock
   loadDeadStock() {
     const { days, warehouseId } = this.deadForm.getRawValue();
-    this.deadLoading = true;
-    this.deadError = '';
+    this.deadLoading.set(true);
+    this.deadError.set('');
     this.reports.deadStock(Number(days) || 30, warehouseId).subscribe({
-      next: (rows) => { this.deadRows = rows; this.deadLoading = false; },
-      error: (e) => { this.deadError = e?.message ?? 'Failed to load dead stock.'; this.deadLoading = false; }
+      next: (rows) => {
+        this.deadRows.set(rows);
+        this.deadLoaded = true;
+        this.deadLoading.set(false);
+      },
+      error: (e) => {
+        this.deadError.set(e?.message ?? 'Failed to load dead stock.');
+        this.deadLoading.set(false);
+      }
     });
   }
 
@@ -201,16 +237,47 @@ export class ReportsPageComponent {
   // Valuation
   loadValuation() {
     const { mode, warehouseId, productId } = this.valuationForm.getRawValue();
-    this.valLoading = true;
-    this.valError = '';
+    this.valLoading.set(true);
+    this.valError.set('');
     this.reports.stockValuation(mode, warehouseId, productId).subscribe({
-      next: (rows) => { this.valRows = rows; this.valLoading = false; },
-      error: (e) => { this.valError = e?.message ?? 'Failed to load valuation.'; this.valLoading = false; }
+      next: (rows) => {
+        this.valRows.set(rows);
+        this.valuationLoaded = true;
+        this.valLoading.set(false);
+      },
+      error: (e) => {
+        this.valError.set(e?.message ?? 'Failed to load valuation.');
+        this.valLoading.set(false);
+      }
     });
   }
 
   resetValuation() {
     this.valuationForm.reset({ mode: 'Fifo', warehouseId: null, productId: null });
     this.loadValuation();
+  }
+
+  trackWarehouse(_: number, row: WarehouseLookupDto) {
+    return row.id;
+  }
+
+  trackProduct(_: number, row: ProductLookupDto) {
+    return row.id;
+  }
+
+  trackMovement(_: number, row: StockMovementDto) {
+    return row.transactionId;
+  }
+
+  trackLow(_: number, row: LowStockItemDto) {
+    return `${row.productId}-${row.warehouseId}-${row.locationId ?? 'x'}`;
+  }
+
+  trackDead(_: number, row: DeadStockItemDto) {
+    return `${row.productId}-${row.warehouseId}`;
+  }
+
+  trackValuation(_: number, row: StockValuationItemDto) {
+    return `${row.productId}-${row.warehouseId}-${row.locationId ?? 'x'}`;
   }
 }

@@ -1,6 +1,6 @@
 <mat-sidenav-container class="layout">
 
-  <mat-sidenav mode="side" opened class="sidebar">
+  <mat-sidenav [mode]="isHandset() ? 'over' : 'side'" [opened]="drawerOpened()" class="sidebar">
 
     <div class="logo">
       <mat-icon>inventory_2</mat-icon>
@@ -9,35 +9,37 @@
 
     <mat-nav-list>
 
-      <a mat-list-item routerLink="/dashboard" routerLinkActive="active">
+      <a mat-list-item routerLink="/dashboard" routerLinkActive="active" (click)="closeDrawerOnNavigate()">
         <mat-icon>dashboard</mat-icon>
         <span>Dashboard</span>
       </a>
 
-      <a mat-list-item routerLink="/products" routerLinkActive="active">
+      <a mat-list-item routerLink="/products" routerLinkActive="active" (click)="closeDrawerOnNavigate()">
         <mat-icon>inventory</mat-icon>
         <span>Products</span>
       </a>
 
-      <a mat-list-item routerLink="/warehouses" routerLinkActive="active">
+      <a mat-list-item routerLink="/warehouses" routerLinkActive="active" (click)="closeDrawerOnNavigate()">
         <mat-icon>warehouse</mat-icon>
         <span>Warehouses</span>
       </a>
 
-      <a mat-list-item routerLink="/inventory" routerLinkActive="active">
+      <a mat-list-item routerLink="/inventory" routerLinkActive="active" (click)="closeDrawerOnNavigate()">
         <mat-icon>sync_alt</mat-icon>
         <span>Inventory</span>
       </a>
 
-      <a mat-list-item routerLink="/reports" routerLinkActive="active">
+      <a mat-list-item routerLink="/reports" routerLinkActive="active" (click)="closeDrawerOnNavigate()">
         <mat-icon>assessment</mat-icon>
         <span>Reports</span>
       </a>
 
-      <a *ngIf="session.hasRole('Admin')" mat-list-item routerLink="/users">
+      @if (session.hasRole('Admin')) {
+      <a mat-list-item routerLink="/users" (click)="closeDrawerOnNavigate()">
         <mat-icon>people</mat-icon>
         <span>Users</span>
       </a>
+      }
 
     </mat-nav-list>
 
@@ -46,6 +48,10 @@
   <mat-sidenav-content>
 
     <mat-toolbar class="toolbar">
+
+      <button mat-icon-button (click)="toggleDrawer()" class="menu-toggle" aria-label="Toggle menu">
+        <mat-icon>menu</mat-icon>
+      </button>
 
       <span class="spacer"></span>
 

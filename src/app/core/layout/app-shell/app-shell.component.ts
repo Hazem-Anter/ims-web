@@ -1,7 +1,10 @@
-import { Component } from '@angular/core';
+import { BreakpointObserver } from '@angular/cdk/layout';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { SessionStore } from '../../auth/session.store';
 import { AuthService } from '../../auth/auth.service';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs';
 
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -26,15 +29,33 @@ import { CommonModule } from '@angular/common';
     MatIconModule
   ],
   templateUrl: './app-shell.component.html',
-  styleUrl: './app-shell.component.scss'
+  styleUrl: './app-shell.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AppShellComponent {
+  readonly session = inject(SessionStore);
+  private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
+  private readonly breakpoints = inject(BreakpointObserver);
 
-  constructor(
-    public session: SessionStore,
-    private auth: AuthService,
-    private router: Router
-  ) {}
+  readonly isHandset = toSignal(
+    this.breakpoints.observe('(max-width: 960px)').pipe(map((state) => state.matches)),
+    { initialValue: false }
+  );
+  private readonly handsetDrawerOpen = signal(false);
+  readonly drawerOpened = computed(() => (this.isHandset() ? this.handsetDrawerOpen() : true));
+
+  toggleDrawer() {
+    if (this.isHandset()) {
+      this.handsetDrawerOpen.update((open) => !open);
+    }
+  }
+
+  closeDrawerOnNavigate() {
+    if (this.isHandset()) {
+      this.handsetDrawerOpen.set(false);
+    }
+  }
 
   logout() {
     this.auth.logout();

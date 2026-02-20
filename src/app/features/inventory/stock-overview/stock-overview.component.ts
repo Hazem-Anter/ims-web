@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -32,25 +32,26 @@ import { LookupsService, ProductLookupDto, WarehouseLookupDto } from '../../look
     MatIconModule
   ],
   templateUrl: './stock-overview.component.html',
-  styleUrl: './stock-overview.component.scss'
+  styleUrl: './stock-overview.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class StockOverviewComponent {
-  loading = false;
-  error = '';
+  private readonly fb = inject(FormBuilder);
+  private readonly inventory = inject(InventoryService);
+  private readonly lookups = inject(LookupsService);
 
-  rows: StockOverviewItemDto[] = [];
-  displayedColumns = ['product', 'warehouse', 'location', 'qty'];
+  readonly loading = signal(false);
+  readonly error = signal('');
 
-  products: ProductLookupDto[] = [];
-  warehouses: WarehouseLookupDto[] = [];
+  readonly rows = signal<StockOverviewItemDto[]>([]);
+  readonly displayedColumns = ['product', 'warehouse', 'location', 'qty'];
+
+  readonly products = signal<ProductLookupDto[]>([]);
+  readonly warehouses = signal<WarehouseLookupDto[]>([]);
 
   filterForm: FormGroup;
 
-  constructor(
-    private fb: FormBuilder,
-    private inventory: InventoryService,
-    private lookups: LookupsService
-  ) {
+  constructor() {
     this.filterForm = this.fb.group({
       warehouseId: [null],
       productId: [null],
@@ -62,17 +63,17 @@ export class StockOverviewComponent {
   }
 
   loadLookups() {
-    this.lookups.products(undefined, true, 200).subscribe({ next: (p) => this.products = p });
-    this.lookups.warehouses(true).subscribe({ next: (w) => this.warehouses = w });
+    this.lookups.products(undefined, true, 200).subscribe({ next: (p) => this.products.set(p) });
+    this.lookups.warehouses(true).subscribe({ next: (w) => this.warehouses.set(w) });
   }
 
   load() {
-    this.loading = true;
-    this.error = '';
+    this.loading.set(true);
+    this.error.set('');
     const { warehouseId, productId, lowStockOnly } = this.filterForm.getRawValue();
     this.inventory.stockOverview(warehouseId, productId, lowStockOnly).subscribe({
-      next: (rows) => { this.rows = rows; this.loading = false; },
-      error: (e) => { this.error = e?.message ?? 'Failed to load overview.'; this.loading = false; }
+      next: (rows) => { this.rows.set(rows); this.loading.set(false); },
+      error: (e) => { this.error.set(e?.message ?? 'Failed to load overview.'); this.loading.set(false); }
     });
   }
 
@@ -80,5 +81,17 @@ export class StockOverviewComponent {
   clear() {
     this.filterForm.reset({ warehouseId: null, productId: null, lowStockOnly: false });
     this.load();
+  }
+
+  trackWarehouse(_: number, row: WarehouseLookupDto) {
+    return row.id;
+  }
+
+  trackProduct(_: number, row: ProductLookupDto) {
+    return row.id;
+  }
+
+  trackOverview(_: number, row: StockOverviewItemDto) {
+    return `${row.productId}-${row.warehouseId}-${row.locationId ?? 'x'}`;
   }
 }

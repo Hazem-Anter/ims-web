@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 
@@ -32,26 +32,28 @@ import { UserManageDialogComponent } from '../user-manage-dialog/user-manage-dia
     MatDialogModule
   ],
   templateUrl: './users-list.component.html',
-  styleUrl: './users-list.component.scss'
+  styleUrl: './users-list.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class UsersListComponent {
-  loading = false;
-  error = '';
+  private readonly fb = inject(FormBuilder);
+  private readonly users = inject(UsersService);
+  private readonly dialog = inject(MatDialog);
+  private activeLoadId = 0;
 
-  rows: UserListItemDto[] = [];
-  displayedColumns = ['email', 'userName', 'status', 'actions'];
+  readonly loading = signal(false);
+  readonly error = signal('');
 
-  page = 1;
-  pageSize = 10;
-  totalCount = 0;
+  readonly rows = signal<UserListItemDto[]>([]);
+  readonly displayedColumns = ['email', 'userName', 'status', 'actions'];
+
+  readonly page = signal(1);
+  readonly pageSize = signal(10);
+  readonly totalCount = signal(0);
 
   filterForm: FormGroup;
 
-  constructor(
-    private fb: FormBuilder,
-    private users: UsersService,
-    private dialog: MatDialog
-  ) {
+  constructor() {
     this.filterForm = this.fb.group({ search: [''] });
     this.load();
   }
@@ -61,30 +63,36 @@ export class UsersListComponent {
   }
 
   load() {
-    this.loading = true;
-    this.error = '';
+    const requestId = ++this.activeLoadId;
+    this.loading.set(true);
+    this.error.set('');
     const search = (this.filterForm.getRawValue().search ?? '').trim();
 
-    this.users.list(search, this.page, this.pageSize).subscribe({
+    this.users.list(search, this.page(), this.pageSize()).subscribe({
       next: (res: PagedResult<UserListItemDto>) => {
-        this.rows = res.items;
-        this.totalCount = res.totalCount;
-        this.page = res.page;
-        this.pageSize = res.pageSize;
-        this.loading = false;
+        if (requestId !== this.activeLoadId) return;
+        this.rows.set(res.items);
+        this.totalCount.set(res.totalCount);
+        this.page.set(res.page);
+        this.pageSize.set(res.pageSize);
+        this.loading.set(false);
       },
-      error: (e) => { this.error = e?.message ?? 'Failed to load users.'; this.loading = false; }
+      error: (e) => {
+        if (requestId !== this.activeLoadId) return;
+        this.error.set(e?.message ?? 'Failed to load users.');
+        this.loading.set(false);
+      }
     });
   }
 
   onPage(ev: PageEvent) {
-    this.page = ev.pageIndex + 1;
-    this.pageSize = ev.pageSize;
+    this.page.set(ev.pageIndex + 1);
+    this.pageSize.set(ev.pageSize);
     this.load();
   }
 
-  search() { this.page = 1; this.load(); }
-  clear() { this.filterForm.reset({ search: '' }); this.page = 1; this.load(); }
+  search() { this.page.set(1); this.load(); }
+  clear() { this.filterForm.reset({ search: '' }); this.page.set(1); this.load(); }
 
   openCreate() {
     const ref = this.dialog.open(UserUpsertDialogComponent, { width: '520px' });
@@ -97,5 +105,9 @@ export class UsersListComponent {
       data: { userId: row.id }
     });
     ref.afterClosed().subscribe((changed) => changed && this.load());
+  }
+
+  trackUser(_: number, row: UserListItemDto) {
+    return row.id;
   }
 }

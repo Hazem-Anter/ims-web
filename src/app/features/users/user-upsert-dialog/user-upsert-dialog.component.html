@@ -18,16 +18,16 @@
   <mat-form-field appearance="outline">
     <mat-label>Roles</mat-label>
     <mat-select formControlName="roles" multiple>
-      <mat-option *ngFor="let r of roles" [value]="r">{{ r }}</mat-option>
+      <mat-option *ngFor="let r of roles()" [value]="r">{{ r }}</mat-option>
     </mat-select>
   </mat-form-field>
 
-  <div class="error" *ngIf="error">{{ error }}</div>
+  <div class="error" *ngIf="error()">{{ error() }}</div>
 </div>
 
 <div mat-dialog-actions align="end">
-  <button mat-button (click)="close()">Cancel</button>
-  <button mat-raised-button color="primary" (click)="save()" [disabled]="loading || form.invalid">
-    Create
+  <button mat-button (click)="close()" [disabled]="loading()">Cancel</button>
+  <button mat-raised-button color="primary" (click)="save()" [disabled]="loading() || form.invalid">
+    {{ loading() ? 'Creating...' : 'Create' }}
   </button>
 </div>

@@ -19,6 +19,8 @@
 .filter-actions { display: flex; gap: 8px; }
 
 .mat-table {
+  background: var(--mat-sys-surface);
+  border: 1px solid color-mix(in srgb, var(--mat-sys-primary) 20%, transparent);
   border-radius: 12px;
   overflow: hidden;
 }
@@ -36,4 +38,15 @@
 
 .error {
   color: var(--mat-sys-error);
+}
+
+@media (max-width: 960px) {
+  .head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .filter-actions {
+    justify-content: flex-start;
+  }
 }

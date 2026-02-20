@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { CurrencyPipe } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -8,37 +8,40 @@ import { DashboardService, DashboardSummaryDto } from './dashboard.service';
 
 @Component({
   selector: 'app-dashboard',
-  standalone: true,
   imports: [
-    CommonModule,
+    CurrencyPipe,
     MatCardModule,
     MatIconModule,
     MatProgressSpinnerModule,
     MatButtonModule
   ],
   templateUrl: './dashboard.component.html',
-  styleUrl: './dashboard.component.scss'
+  styleUrl: './dashboard.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DashboardComponent {
-  loading = true;
-  error = '';
-  data: DashboardSummaryDto | null = null;
+  private readonly dashboard = inject(DashboardService);
 
-  constructor(private dashboard: DashboardService) {
+  readonly loading = signal(true);
+  readonly error = signal('');
+  readonly data = signal<DashboardSummaryDto | null>(null);
+  readonly hasData = computed(() => this.data() !== null);
+
+  constructor() {
     this.load();
   }
 
-  load() {
-    this.loading = true;
-    this.error = '';
-    this.dashboard.getSummary().subscribe({
+  load(forceRefresh = false) {
+    this.loading.set(true);
+    this.error.set('');
+    this.dashboard.getSummary(forceRefresh).subscribe({
       next: (res) => {
-        this.data = res;
-        this.loading = false;
+        this.data.set(res);
+        this.loading.set(false);
       },
       error: (e) => {
-        this.error = e?.message ?? 'Failed to load dashboard.';
-        this.loading = false;
+        this.error.set(e?.message ?? 'Failed to load dashboard.');
+        this.loading.set(false);
       }
     });
   }

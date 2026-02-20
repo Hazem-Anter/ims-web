@@ -7,12 +7,12 @@
     <mat-error *ngIf="form.get('code')?.hasError('required')">Required</mat-error>
   </mat-form-field>
 
-  <div class="error" *ngIf="error">{{ error }}</div>
+  <div class="error" *ngIf="error()">{{ error() }}</div>
 </div>
 
 <div mat-dialog-actions align="end">
-  <button mat-button (click)="close()">Cancel</button>
-  <button mat-raised-button color="primary" (click)="save()" [disabled]="loading || form.invalid">
-    {{ isEdit ? 'Save' : 'Create' }}
+  <button mat-button (click)="close()" [disabled]="loading()">Cancel</button>
+  <button mat-raised-button color="primary" (click)="save()" [disabled]="loading() || form.invalid">
+    {{ loading() ? 'Saving...' : (isEdit ? 'Save' : 'Create') }}
   </button>
 </div>

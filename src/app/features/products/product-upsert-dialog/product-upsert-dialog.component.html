@@ -68,8 +68,8 @@
 
 
     <!-- Error message -->
-    <div class="error" *ngIf="error">
-      {{ error }}
+    <div class="error" *ngIf="error()">
+      {{ error() }}
     </div>
 
   </form>
@@ -81,7 +81,7 @@
   <button
     mat-button
     (click)="close()"
-    [disabled]="loading"
+    [disabled]="loading()"
   >
     Cancel
   </button>
@@ -90,9 +90,9 @@
     mat-flat-button
     color="primary"
     (click)="save()"
-    [disabled]="loading || form.invalid"
+    [disabled]="loading() || form.invalid"
   >
-    {{ loading ? 'Saving...' : 'Save' }}
+    {{ loading() ? 'Saving...' : 'Save' }}
   </button>
 
 </div>

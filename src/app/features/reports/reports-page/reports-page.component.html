@@ -2,7 +2,7 @@
   <h2>Reports & Analytics</h2>
   <p class="muted">Transactional visibility plus forward-looking risk signals.</p>
 
-  <mat-tab-group>
+  <mat-tab-group (selectedIndexChange)="onTabChange($event)">
     <mat-tab label="Stock movements">
       <div class="section">
         <form class="filters" [formGroup]="movementsForm">
@@ -18,14 +18,14 @@
             <mat-label>Warehouse</mat-label>
             <mat-select formControlName="warehouseId">
               <mat-option [value]="null">All</mat-option>
-              <mat-option *ngFor="let w of warehouses" [value]="w.id">{{ w.name }} ({{ w.code }})</mat-option>
+              <mat-option *ngFor="let w of warehouses(); trackBy: trackWarehouse" [value]="w.id">{{ w.name }} ({{ w.code }})</mat-option>
             </mat-select>
           </mat-form-field>
           <mat-form-field appearance="outline">
             <mat-label>Product</mat-label>
             <mat-select formControlName="productId">
               <mat-option [value]="null">All</mat-option>
-              <mat-option *ngFor="let p of products" [value]="p.id">{{ p.name }} — {{ p.sku }}</mat-option>
+              <mat-option *ngFor="let p of products(); trackBy: trackProduct" [value]="p.id">{{ p.name }} — {{ p.sku }}</mat-option>
             </mat-select>
           </mat-form-field>
           <div class="filter-actions">
@@ -34,7 +34,7 @@
           </div>
         </form>
 
-        <mat-table [dataSource]="movementRows" class="mat-elevation-z1">
+        <mat-table [dataSource]="movementRows()" class="mat-elevation-z0">
           <ng-container matColumnDef="createAt">
             <mat-header-cell *matHeaderCellDef>Date</mat-header-cell>
             <mat-cell *matCellDef="let row">{{ row.createAt | date:'yyyy-MM-dd HH:mm' }}</mat-cell>
@@ -66,23 +66,23 @@
           </ng-container>
 
           <mat-header-row *matHeaderRowDef="movementColumns"></mat-header-row>
-          <mat-row *matRowDef="let row; columns: movementColumns;"></mat-row>
+          <mat-row *matRowDef="let row; columns: movementColumns; trackBy: trackMovement"></mat-row>
           <mat-row *matNoDataRow>
             <td [attr.colspan]="movementColumns.length" class="empty">
-              {{ mvLoading ? 'Loading...' : 'No movements in range' }}
+              {{ mvLoading() ? 'Loading...' : 'No movements in range' }}
             </td>
           </mat-row>
         </mat-table>
 
         <mat-paginator
-          [length]="mvTotal"
-          [pageIndex]="mvPage - 1"
-          [pageSize]="mvPageSize"
+          [length]="mvTotal()"
+          [pageIndex]="mvPage() - 1"
+          [pageSize]="mvPageSize()"
           [pageSizeOptions]="[20,50,100,150]"
           (page)="mvPageChange($event)">
         </mat-paginator>
 
-        <div class="error" *ngIf="mvError">{{ mvError }}</div>
+        <div class="error" *ngIf="mvError()">{{ mvError() }}</div>
       </div>
     </mat-tab>
 
@@ -93,14 +93,14 @@
             <mat-label>Warehouse</mat-label>
             <mat-select formControlName="warehouseId">
               <mat-option [value]="null">All</mat-option>
-              <mat-option *ngFor="let w of warehouses" [value]="w.id">{{ w.name }} ({{ w.code }})</mat-option>
+              <mat-option *ngFor="let w of warehouses(); trackBy: trackWarehouse" [value]="w.id">{{ w.name }} ({{ w.code }})</mat-option>
             </mat-select>
           </mat-form-field>
           <mat-form-field appearance="outline">
             <mat-label>Product</mat-label>
             <mat-select formControlName="productId">
               <mat-option [value]="null">All</mat-option>
-              <mat-option *ngFor="let p of products" [value]="p.id">{{ p.name }} — {{ p.sku }}</mat-option>
+              <mat-option *ngFor="let p of products(); trackBy: trackProduct" [value]="p.id">{{ p.name }} — {{ p.sku }}</mat-option>
             </mat-select>
           </mat-form-field>
           <div class="filter-actions">
@@ -109,7 +109,7 @@
           </div>
         </form>
 
-        <mat-table [dataSource]="lowRows" class="mat-elevation-z1">
+        <mat-table [dataSource]="lowRows()" class="mat-elevation-z0">
           <ng-container matColumnDef="product">
             <mat-header-cell *matHeaderCellDef>Product</mat-header-cell>
             <mat-cell *matCellDef="let row">
@@ -136,14 +136,14 @@
             </mat-cell>
           </ng-container>
           <mat-header-row *matHeaderRowDef="lowColumns"></mat-header-row>
-          <mat-row *matRowDef="let row; columns: lowColumns;"></mat-row>
+          <mat-row *matRowDef="let row; columns: lowColumns; trackBy: trackLow"></mat-row>
           <mat-row *matNoDataRow>
             <td [attr.colspan]="lowColumns.length" class="empty">
-              {{ lowLoading ? 'Loading...' : 'No low stock items' }}
+              {{ lowLoading() ? 'Loading...' : 'No low stock items' }}
             </td>
           </mat-row>
         </mat-table>
-        <div class="error" *ngIf="lowError">{{ lowError }}</div>
+        <div class="error" *ngIf="lowError()">{{ lowError() }}</div>
       </div>
     </mat-tab>
 
@@ -158,7 +158,7 @@
             <mat-label>Warehouse</mat-label>
             <mat-select formControlName="warehouseId">
               <mat-option [value]="null">All</mat-option>
-              <mat-option *ngFor="let w of warehouses" [value]="w.id">{{ w.name }} ({{ w.code }})</mat-option>
+              <mat-option *ngFor="let w of warehouses(); trackBy: trackWarehouse" [value]="w.id">{{ w.name }} ({{ w.code }})</mat-option>
             </mat-select>
           </mat-form-field>
           <div class="filter-actions">
@@ -167,7 +167,7 @@
           </div>
         </form>
 
-        <mat-table [dataSource]="deadRows" class="mat-elevation-z1">
+        <mat-table [dataSource]="deadRows()" class="mat-elevation-z0">
           <ng-container matColumnDef="product">
             <mat-header-cell *matHeaderCellDef>Product</mat-header-cell>
             <mat-cell *matCellDef="let row">
@@ -192,15 +192,15 @@
             <mat-cell *matCellDef="let row">{{ row.daysSinceLastMovement }}</mat-cell>
           </ng-container>
           <mat-header-row *matHeaderRowDef="deadColumns"></mat-header-row>
-          <mat-row *matRowDef="let row; columns: deadColumns;"></mat-row>
+          <mat-row *matRowDef="let row; columns: deadColumns; trackBy: trackDead"></mat-row>
           <mat-row *matNoDataRow>
             <td [attr.colspan]="deadColumns.length" class="empty">
-              {{ deadLoading ? 'Loading...' : 'No dead stock items' }}
+              {{ deadLoading() ? 'Loading...' : 'No dead stock items' }}
             </td>
           </mat-row>
         </mat-table>
 
-        <div class="error" *ngIf="deadError">{{ deadError }}</div>
+        <div class="error" *ngIf="deadError()">{{ deadError() }}</div>
       </div>
     </mat-tab>
 
@@ -218,14 +218,14 @@
             <mat-label>Warehouse</mat-label>
             <mat-select formControlName="warehouseId">
               <mat-option [value]="null">All</mat-option>
-              <mat-option *ngFor="let w of warehouses" [value]="w.id">{{ w.name }} ({{ w.code }})</mat-option>
+              <mat-option *ngFor="let w of warehouses(); trackBy: trackWarehouse" [value]="w.id">{{ w.name }} ({{ w.code }})</mat-option>
             </mat-select>
           </mat-form-field>
           <mat-form-field appearance="outline">
             <mat-label>Product</mat-label>
             <mat-select formControlName="productId">
               <mat-option [value]="null">All</mat-option>
-              <mat-option *ngFor="let p of products" [value]="p.id">{{ p.name }} — {{ p.sku }}</mat-option>
+              <mat-option *ngFor="let p of products(); trackBy: trackProduct" [value]="p.id">{{ p.name }} — {{ p.sku }}</mat-option>
             </mat-select>
           </mat-form-field>
           <div class="filter-actions">
@@ -234,7 +234,7 @@
           </div>
         </form>
 
-        <mat-table [dataSource]="valRows" class="mat-elevation-z1">
+        <mat-table [dataSource]="valRows()" class="mat-elevation-z0">
           <ng-container matColumnDef="product">
             <mat-header-cell *matHeaderCellDef>Product</mat-header-cell>
             <mat-cell *matCellDef="let row">
@@ -264,15 +264,15 @@
           </ng-container>
 
           <mat-header-row *matHeaderRowDef="valColumns"></mat-header-row>
-          <mat-row *matRowDef="let row; columns: valColumns;"></mat-row>
+          <mat-row *matRowDef="let row; columns: valColumns; trackBy: trackValuation"></mat-row>
           <mat-row *matNoDataRow>
             <td [attr.colspan]="valColumns.length" class="empty">
-              {{ valLoading ? 'Loading...' : 'No valuation rows' }}
+              {{ valLoading() ? 'Loading...' : 'No valuation rows' }}
             </td>
           </mat-row>
         </mat-table>
 
-        <div class="error" *ngIf="valError">{{ valError }}</div>
+        <div class="error" *ngIf="valError()">{{ valError() }}</div>
       </div>
     </mat-tab>
   </mat-tab-group>

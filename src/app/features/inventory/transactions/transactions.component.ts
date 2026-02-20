@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -32,29 +32,30 @@ import { LookupsService, ProductLookupDto, WarehouseLookupDto, LocationLookupDto
     MatIconModule
   ],
   templateUrl: './transactions.component.html',
-  styleUrl: './transactions.component.scss'
+  styleUrl: './transactions.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TransactionsComponent {
-  products: ProductLookupDto[] = [];
-  warehouses: WarehouseLookupDto[] = [];
-  fromLocations: LocationLookupDto[] = [];
-  toLocations: LocationLookupDto[] = [];
-  locations: LocationLookupDto[] = [];
+  private readonly fb = inject(FormBuilder);
+  private readonly inventory = inject(InventoryService);
+  private readonly lookups = inject(LookupsService);
 
-  loading = false;
-  message = '';
-  error = '';
+  readonly products = signal<ProductLookupDto[]>([]);
+  readonly warehouses = signal<WarehouseLookupDto[]>([]);
+  readonly fromLocations = signal<LocationLookupDto[]>([]);
+  readonly toLocations = signal<LocationLookupDto[]>([]);
+  readonly locations = signal<LocationLookupDto[]>([]);
+
+  readonly loading = signal(false);
+  readonly message = signal('');
+  readonly error = signal('');
 
   receiveForm: FormGroup;
   issueForm: FormGroup;
   transferForm: FormGroup;
   adjustForm: FormGroup;
 
-  constructor(
-    private fb: FormBuilder,
-    private inventory: InventoryService,
-    private lookups: LookupsService
-  ) {
+  constructor() {
     this.receiveForm = this.fb.group({
       productId: [null, Validators.required],
       warehouseId: [null, Validators.required],
@@ -101,10 +102,10 @@ export class TransactionsComponent {
 
   private loadLookups() {
     this.lookups.products(undefined, true, 100).subscribe({
-      next: (p) => this.products = p
+      next: (p) => this.products.set(p)
     });
     this.lookups.warehouses(true).subscribe({
-      next: (w) => this.warehouses = w
+      next: (w) => this.warehouses.set(w)
     });
   }
 
@@ -118,35 +119,40 @@ export class TransactionsComponent {
 
   private loadLocationsFor(warehouseId: number | null, target: 'from' | 'to' | 'locations') {
     if (!warehouseId) {
-      if (target === 'from') this.fromLocations = [];
-      else if (target === 'to') this.toLocations = [];
-      else this.locations = [];
+      if (target === 'from') this.fromLocations.set([]);
+      else if (target === 'to') this.toLocations.set([]);
+      else this.locations.set([]);
       return;
     }
     this.lookups.locations(warehouseId, undefined, true, 100).subscribe({
       next: (locs) => {
-        if (target === 'from') this.fromLocations = locs;
-        else if (target === 'to') this.toLocations = locs;
-        else this.locations = locs;
+        if (target === 'from') this.fromLocations.set(locs);
+        else if (target === 'to') this.toLocations.set(locs);
+        else this.locations.set(locs);
       }
     });
   }
 
   private handleResult(successMsg: string) {
-    this.message = successMsg;
-    this.error = '';
-    this.loading = false;
+    this.message.set(successMsg);
+    this.error.set('');
+    this.loading.set(false);
   }
 
-  private handleError(e: any) {
-    this.loading = false;
-    this.message = '';
-    this.error = e?.message ?? 'Operation failed.';
+  private handleError(e: unknown) {
+    const message =
+      typeof e === 'object' && e !== null && 'message' in e && typeof (e as { message?: unknown }).message === 'string'
+        ? (e as { message: string }).message
+        : 'Operation failed.';
+
+    this.loading.set(false);
+    this.message.set('');
+    this.error.set(message);
   }
 
   submitReceive() {
     if (this.receiveForm.invalid) return;
-    this.loading = true;
+    this.loading.set(true);
     const v = this.receiveForm.getRawValue();
     this.inventory.receive({
       ...v,
@@ -160,7 +166,7 @@ export class TransactionsComponent {
 
   submitIssue() {
     if (this.issueForm.invalid) return;
-    this.loading = true;
+    this.loading.set(true);
     const v = this.issueForm.getRawValue();
     this.inventory.issue({
       ...v,
@@ -173,7 +179,7 @@ export class TransactionsComponent {
 
   submitTransfer() {
     if (this.transferForm.invalid) return;
-    this.loading = true;
+    this.loading.set(true);
     const v = this.transferForm.getRawValue();
     this.inventory.transfer({
       ...v,
@@ -186,7 +192,7 @@ export class TransactionsComponent {
 
   submitAdjust() {
     if (this.adjustForm.invalid) return;
-    this.loading = true;
+    this.loading.set(true);
     const v = this.adjustForm.getRawValue();
     this.inventory.adjust({
       ...v,
@@ -195,5 +201,17 @@ export class TransactionsComponent {
       next: () => this.handleResult('Stock adjusted successfully.'),
       error: (e) => this.handleError(e)
     });
+  }
+
+  trackProduct(_: number, item: ProductLookupDto) {
+    return item.id;
+  }
+
+  trackWarehouse(_: number, item: WarehouseLookupDto) {
+    return item.id;
+  }
+
+  trackLocation(_: number, item: LocationLookupDto) {
+    return item.id;
   }
 }

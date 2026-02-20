@@ -1,28 +1,38 @@
 <div class="wrap">
-  <div class="card">
+  <mat-card class="card">
     <h2>Initialize IMS</h2>
     <p>First-time setup: creates roles + first Admin user.</p>
 
-    <form [formGroup]="form" (ngSubmit)="submit()">
-      <label>Setup Key</label>
-      <input formControlName="setupKey" placeholder="X-Setup-Key" />
+    <form [formGroup]="form" (ngSubmit)="submit()" class="form">
+      <mat-form-field appearance="outline">
+        <mat-label>Setup Key</mat-label>
+        <input matInput formControlName="setupKey" placeholder="X-Setup-Key" />
+      </mat-form-field>
 
-      <label>Admin Email</label>
-      <input formControlName="email" />
+      <mat-form-field appearance="outline">
+        <mat-label>Admin Email</mat-label>
+        <input matInput formControlName="email" />
+      </mat-form-field>
 
-      <label>Admin Username</label>
-      <input formControlName="userName" />
+      <mat-form-field appearance="outline">
+        <mat-label>Admin Username</mat-label>
+        <input matInput formControlName="userName" />
+      </mat-form-field>
 
-      <label>Admin Password</label>
-      <input type="password" formControlName="password" />
+      <mat-form-field appearance="outline">
+        <mat-label>Admin Password</mat-label>
+        <input matInput type="password" formControlName="password" />
+      </mat-form-field>
 
-      <div class="error" *ngIf="error">{{ error }}</div>
+      @if (error()) {
+      <div class="error">{{ error() }}</div>
+      }
 
-      <button type="submit" [disabled]="loading || form.invalid">
-        {{ loading ? 'Initializing...' : 'Initialize' }}
+      <button mat-flat-button color="primary" type="submit" [disabled]="loading() || form.invalid">
+        {{ loading() ? 'Initializing...' : 'Initialize' }}
       </button>
 
       <a class="link" routerLink="/login">Go to Login</a>
     </form>
-  </div>
+  </mat-card>
 </div>

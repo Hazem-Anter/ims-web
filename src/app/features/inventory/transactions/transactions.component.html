@@ -10,14 +10,18 @@
     </a>
   </div>
 
-  <div class="flash" *ngIf="message">
+  @if (message()) {
+  <div class="flash">
     <mat-icon color="primary">check_circle</mat-icon>
-    <span>{{ message }}</span>
+    <span>{{ message() }}</span>
   </div>
-  <div class="flash error" *ngIf="error">
+  }
+  @if (error()) {
+  <div class="flash error">
     <mat-icon color="warn">error</mat-icon>
-    <span>{{ error }}</span>
+    <span>{{ error() }}</span>
   </div>
+  }
 
   <mat-tab-group>
     <mat-tab label="Receive">
@@ -26,14 +30,18 @@
           <mat-form-field appearance="outline">
             <mat-label>Product</mat-label>
             <mat-select formControlName="productId" required>
-              <mat-option *ngFor="let p of products" [value]="p.id">{{ p.name }} — {{ p.sku }}</mat-option>
+              @for (p of products(); track trackProduct($index, p)) {
+              <mat-option [value]="p.id">{{ p.name }} — {{ p.sku }}</mat-option>
+              }
             </mat-select>
           </mat-form-field>
 
           <mat-form-field appearance="outline">
             <mat-label>Warehouse</mat-label>
             <mat-select formControlName="warehouseId" required>
-              <mat-option *ngFor="let w of warehouses" [value]="w.id">{{ w.name }} ({{ w.code }})</mat-option>
+              @for (w of warehouses(); track trackWarehouse($index, w)) {
+              <mat-option [value]="w.id">{{ w.name }} ({{ w.code }})</mat-option>
+              }
             </mat-select>
           </mat-form-field>
 
@@ -41,7 +49,9 @@
             <mat-label>Location (optional)</mat-label>
             <mat-select formControlName="locationId">
               <mat-option [value]="null">Not specified</mat-option>
-              <mat-option *ngFor="let l of locations" [value]="l.id">{{ l.code }}</mat-option>
+              @for (l of locations(); track trackLocation($index, l)) {
+              <mat-option [value]="l.id">{{ l.code }}</mat-option>
+              }
             </mat-select>
           </mat-form-field>
 
@@ -66,7 +76,7 @@
           </mat-form-field>
 
           <div class="actions">
-            <button mat-raised-button color="primary" type="submit" [disabled]="receiveForm.invalid || loading">
+            <button mat-raised-button color="primary" type="submit" [disabled]="receiveForm.invalid || loading()">
               Receive
             </button>
           </div>
@@ -80,14 +90,18 @@
           <mat-form-field appearance="outline">
             <mat-label>Product</mat-label>
             <mat-select formControlName="productId" required>
-              <mat-option *ngFor="let p of products" [value]="p.id">{{ p.name }} — {{ p.sku }}</mat-option>
+              @for (p of products(); track trackProduct($index, p)) {
+              <mat-option [value]="p.id">{{ p.name }} — {{ p.sku }}</mat-option>
+              }
             </mat-select>
           </mat-form-field>
 
           <mat-form-field appearance="outline">
             <mat-label>Warehouse</mat-label>
             <mat-select formControlName="warehouseId" required>
-              <mat-option *ngFor="let w of warehouses" [value]="w.id">{{ w.name }} ({{ w.code }})</mat-option>
+              @for (w of warehouses(); track trackWarehouse($index, w)) {
+              <mat-option [value]="w.id">{{ w.name }} ({{ w.code }})</mat-option>
+              }
             </mat-select>
           </mat-form-field>
 
@@ -95,7 +109,9 @@
             <mat-label>Location (optional)</mat-label>
             <mat-select formControlName="locationId">
               <mat-option [value]="null">Not specified</mat-option>
-              <mat-option *ngFor="let l of locations" [value]="l.id">{{ l.code }}</mat-option>
+              @for (l of locations(); track trackLocation($index, l)) {
+              <mat-option [value]="l.id">{{ l.code }}</mat-option>
+              }
             </mat-select>
           </mat-form-field>
 
@@ -115,7 +131,7 @@
           </mat-form-field>
 
           <div class="actions">
-            <button mat-raised-button color="primary" type="submit" [disabled]="issueForm.invalid || loading">
+            <button mat-raised-button color="primary" type="submit" [disabled]="issueForm.invalid || loading()">
               Issue
             </button>
           </div>
@@ -129,14 +145,18 @@
           <mat-form-field appearance="outline">
             <mat-label>Product</mat-label>
             <mat-select formControlName="productId" required>
-              <mat-option *ngFor="let p of products" [value]="p.id">{{ p.name }} — {{ p.sku }}</mat-option>
+              @for (p of products(); track trackProduct($index, p)) {
+              <mat-option [value]="p.id">{{ p.name }} — {{ p.sku }}</mat-option>
+              }
             </mat-select>
           </mat-form-field>
 
           <mat-form-field appearance="outline">
             <mat-label>From warehouse</mat-label>
             <mat-select formControlName="fromWarehouseId" required>
-              <mat-option *ngFor="let w of warehouses" [value]="w.id">{{ w.name }} ({{ w.code }})</mat-option>
+              @for (w of warehouses(); track trackWarehouse($index, w)) {
+              <mat-option [value]="w.id">{{ w.name }} ({{ w.code }})</mat-option>
+              }
             </mat-select>
           </mat-form-field>
 
@@ -144,14 +164,18 @@
             <mat-label>From location</mat-label>
             <mat-select formControlName="fromLocationId">
               <mat-option [value]="null">Not specified</mat-option>
-              <mat-option *ngFor="let l of fromLocations" [value]="l.id">{{ l.code }}</mat-option>
+              @for (l of fromLocations(); track trackLocation($index, l)) {
+              <mat-option [value]="l.id">{{ l.code }}</mat-option>
+              }
             </mat-select>
           </mat-form-field>
 
           <mat-form-field appearance="outline">
             <mat-label>To warehouse</mat-label>
             <mat-select formControlName="toWarehouseId" required>
-              <mat-option *ngFor="let w of warehouses" [value]="w.id">{{ w.name }} ({{ w.code }})</mat-option>
+              @for (w of warehouses(); track trackWarehouse($index, w)) {
+              <mat-option [value]="w.id">{{ w.name }} ({{ w.code }})</mat-option>
+              }
             </mat-select>
           </mat-form-field>
 
@@ -159,7 +183,9 @@
             <mat-label>To location</mat-label>
             <mat-select formControlName="toLocationId">
               <mat-option [value]="null">Not specified</mat-option>
-              <mat-option *ngFor="let l of toLocations" [value]="l.id">{{ l.code }}</mat-option>
+              @for (l of toLocations(); track trackLocation($index, l)) {
+              <mat-option [value]="l.id">{{ l.code }}</mat-option>
+              }
             </mat-select>
           </mat-form-field>
 
@@ -179,7 +205,7 @@
           </mat-form-field>
 
           <div class="actions">
-            <button mat-raised-button color="primary" type="submit" [disabled]="transferForm.invalid || loading">
+            <button mat-raised-button color="primary" type="submit" [disabled]="transferForm.invalid || loading()">
               Transfer
             </button>
           </div>
@@ -193,14 +219,18 @@
           <mat-form-field appearance="outline">
             <mat-label>Product</mat-label>
             <mat-select formControlName="productId" required>
-              <mat-option *ngFor="let p of products" [value]="p.id">{{ p.name }} — {{ p.sku }}</mat-option>
+              @for (p of products(); track trackProduct($index, p)) {
+              <mat-option [value]="p.id">{{ p.name }} — {{ p.sku }}</mat-option>
+              }
             </mat-select>
           </mat-form-field>
 
           <mat-form-field appearance="outline">
             <mat-label>Warehouse</mat-label>
             <mat-select formControlName="warehouseId" required>
-              <mat-option *ngFor="let w of warehouses" [value]="w.id">{{ w.name }} ({{ w.code }})</mat-option>
+              @for (w of warehouses(); track trackWarehouse($index, w)) {
+              <mat-option [value]="w.id">{{ w.name }} ({{ w.code }})</mat-option>
+              }
             </mat-select>
           </mat-form-field>
 
@@ -208,7 +238,9 @@
             <mat-label>Location (optional)</mat-label>
             <mat-select formControlName="locationId">
               <mat-option [value]="null">Not specified</mat-option>
-              <mat-option *ngFor="let l of locations" [value]="l.id">{{ l.code }}</mat-option>
+              @for (l of locations(); track trackLocation($index, l)) {
+              <mat-option [value]="l.id">{{ l.code }}</mat-option>
+              }
             </mat-select>
           </mat-form-field>
 
@@ -233,7 +265,7 @@
           </mat-form-field>
 
           <div class="actions">
-            <button mat-raised-button color="primary" type="submit" [disabled]="adjustForm.invalid || loading">
+            <button mat-raised-button color="primary" type="submit" [disabled]="adjustForm.invalid || loading()">
               Adjust
             </button>
           </div>

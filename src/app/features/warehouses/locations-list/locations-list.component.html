@@ -5,7 +5,7 @@
         <mat-icon>arrow_back</mat-icon>
         Back to warehouses
       </button>
-      <h2>Locations — {{ warehouseName || ('Warehouse #' + warehouseId) }}</h2>
+      <h2>Locations — {{ warehouseName() || ('Warehouse #' + warehouseId) }}</h2>
       <p class="muted">Storage bins / aisles for this warehouse.</p>
     </div>
     <button mat-raised-button color="primary" (click)="openCreate()">
@@ -35,7 +35,7 @@
     </div>
   </form>
 
-  <mat-table [dataSource]="rows" class="mat-elevation-z1">
+  <mat-table [dataSource]="rows()" class="mat-elevation-z0">
     <ng-container matColumnDef="code">
       <mat-header-cell *matHeaderCellDef>Code</mat-header-cell>
       <mat-cell *matCellDef="let row">
@@ -56,23 +56,25 @@
     <ng-container matColumnDef="actions">
       <mat-header-cell *matHeaderCellDef class="actions"></mat-header-cell>
       <mat-cell *matCellDef="let row" class="actions">
-        <button mat-icon-button matTooltip="Edit" (click)="openEdit(row)">
+        <button mat-icon-button matTooltip="Edit" aria-label="Edit location" (click)="openEdit(row)" [disabled]="loading()">
           <mat-icon>edit</mat-icon>
         </button>
-        <button mat-icon-button matTooltip="Toggle active" (click)="toggleActive(row)">
+        <button mat-icon-button matTooltip="Toggle active" aria-label="Toggle location active status" (click)="toggleActive(row)" [disabled]="loading()">
           <mat-icon>{{ row.isActive ? 'pause_circle' : 'play_circle' }}</mat-icon>
         </button>
       </mat-cell>
     </ng-container>
 
     <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-    <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+    <mat-row *matRowDef="let row; columns: displayedColumns; trackBy: trackLocation"></mat-row>
     <mat-row *matNoDataRow>
       <td [attr.colspan]="displayedColumns.length" class="empty">
-        {{ loading ? 'Loading...' : 'No locations found' }}
+        {{ loading() ? 'Loading...' : 'No locations found' }}
       </td>
     </mat-row>
   </mat-table>
 
-  <div class="error" *ngIf="error">{{ error }}</div>
+  @if (error()) {
+  <div class="error">{{ error() }}</div>
+  }
 </div>

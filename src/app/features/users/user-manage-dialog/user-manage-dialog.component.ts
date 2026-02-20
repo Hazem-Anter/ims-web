@@ -1,4 +1,4 @@
-import { Component, Inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
@@ -26,13 +26,15 @@ import { UsersService, UserDetailsDto } from '../users.service';
     MatSelectModule
   ],
   templateUrl: './user-manage-dialog.component.html',
-  styleUrl: './user-manage-dialog.component.scss'
+  styleUrl: './user-manage-dialog.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class UserManageDialogComponent {
-  user: UserDetailsDto | null = null;
-  roles: string[] = [];
-  loading = true;
-  error = '';
+  readonly user = signal<UserDetailsDto | null>(null);
+  readonly roles = signal<string[]>([]);
+  readonly loading = signal(true);
+  readonly actionBusy = signal(false);
+  readonly error = signal('');
 
   roleForm: FormGroup;
   passwordForm: FormGroup;
@@ -49,54 +51,99 @@ export class UserManageDialogComponent {
   }
 
   private load() {
-    this.loading = true;
-    this.error = '';
+    this.loading.set(true);
+    this.error.set('');
 
     this.users.listRoles().subscribe({
-      next: (r) => this.roles = r,
+      next: (r) => this.roles.set(r),
       error: () => {}
     });
 
     this.users.get(this.data.userId).subscribe({
-      next: (u) => { this.user = u; this.loading = false; },
-      error: (e) => { this.error = e?.message ?? 'Failed to load user.'; this.loading = false; }
+      next: (u) => { this.user.set(u); this.loading.set(false); },
+      error: (e) => { this.error.set(e?.message ?? 'Failed to load user.'); this.loading.set(false); }
     });
   }
 
   close(changed = false) { this.ref.close(changed); }
 
   addRole() {
-    if (!this.user || this.roleForm.invalid) return;
+    const currentUser = this.user();
+    if (!currentUser || this.roleForm.invalid) return;
     const role = this.roleForm.getRawValue().role;
-    this.users.assignRole(this.user.id, role).subscribe({
-      next: () => { this.load(); this.roleForm.reset(); },
-      error: (e) => { this.error = e?.message ?? 'Failed to add role.'; }
+    this.actionBusy.set(true);
+    this.users.assignRole(currentUser.id, role).subscribe({
+      next: () => {
+        const latest = this.user();
+        if (latest && !latest.roles.includes(role)) {
+          this.user.set({ ...latest, roles: [...latest.roles, role] });
+        }
+        this.roleForm.reset();
+        this.actionBusy.set(false);
+      },
+      error: (e) => {
+        this.error.set(e?.message ?? 'Failed to add role.');
+        this.actionBusy.set(false);
+      }
     });
   }
 
   removeRole(role: string) {
-    if (!this.user) return;
-    this.users.removeRole(this.user.id, role).subscribe({
-      next: () => this.load(),
-      error: (e) => { this.error = e?.message ?? 'Failed to remove role.'; }
+    const currentUser = this.user();
+    if (!currentUser) return;
+    this.actionBusy.set(true);
+    this.users.removeRole(currentUser.id, role).subscribe({
+      next: () => {
+        const latest = this.user();
+        if (latest) {
+          this.user.set({ ...latest, roles: latest.roles.filter((r) => r !== role) });
+        }
+        this.actionBusy.set(false);
+      },
+      error: (e) => {
+        this.error.set(e?.message ?? 'Failed to remove role.');
+        this.actionBusy.set(false);
+      }
     });
   }
 
   resetPassword() {
-    if (!this.user || this.passwordForm.invalid) return;
+    const currentUser = this.user();
+    if (!currentUser || this.passwordForm.invalid) return;
     const pwd = this.passwordForm.getRawValue().password;
-    this.users.resetPassword(this.user.id, pwd).subscribe({
-      next: () => { this.passwordForm.reset(); },
-      error: (e) => { this.error = e?.message ?? 'Failed to reset password.'; }
+    this.actionBusy.set(true);
+    this.users.resetPassword(currentUser.id, pwd).subscribe({
+      next: () => {
+        this.passwordForm.reset();
+        this.actionBusy.set(false);
+      },
+      error: (e) => {
+        this.error.set(e?.message ?? 'Failed to reset password.');
+        this.actionBusy.set(false);
+      }
     });
   }
 
   toggleActive() {
-    if (!this.user) return;
-    const req = this.user.lockoutEnd ? this.users.activate(this.user.id) : this.users.deactivate(this.user.id);
+    const currentUser = this.user();
+    if (!currentUser) return;
+    this.actionBusy.set(true);
+    const req = currentUser.lockoutEnd ? this.users.activate(currentUser.id) : this.users.deactivate(currentUser.id);
     req.subscribe({
-      next: () => this.load(),
-      error: (e) => { this.error = e?.message ?? 'Failed to update status.'; }
+      next: () => {
+        const latest = this.user();
+        if (latest) {
+          this.user.set({
+            ...latest,
+            lockoutEnd: latest.lockoutEnd ? null : new Date().toISOString()
+          });
+        }
+        this.actionBusy.set(false);
+      },
+      error: (e) => {
+        this.error.set(e?.message ?? 'Failed to update status.');
+        this.actionBusy.set(false);
+      }
     });
   }
 }

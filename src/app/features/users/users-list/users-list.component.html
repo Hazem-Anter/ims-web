@@ -21,7 +21,7 @@
     </div>
   </form>
 
-  <mat-table [dataSource]="rows" class="mat-elevation-z1">
+  <mat-table [dataSource]="rows()" class="mat-elevation-z0">
     <ng-container matColumnDef="email">
       <mat-header-cell *matHeaderCellDef>Email</mat-header-cell>
       <mat-cell *matCellDef="let row">
@@ -38,8 +38,12 @@
     <ng-container matColumnDef="status">
       <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
       <mat-cell *matCellDef="let row">
-        <mat-chip color="primary" *ngIf="getStatus(row) === 'active'" selected>Active</mat-chip>
-        <mat-chip color="warn" *ngIf="getStatus(row) === 'locked'" selected>Deactivated</mat-chip>
+        @if (getStatus(row) === 'active') {
+        <mat-chip color="primary" selected>Active</mat-chip>
+        }
+        @if (getStatus(row) === 'locked') {
+        <mat-chip color="warn" selected>Deactivated</mat-chip>
+        }
       </mat-cell>
     </ng-container>
 
@@ -54,21 +58,23 @@
     </ng-container>
 
     <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-    <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+    <mat-row *matRowDef="let row; columns: displayedColumns; trackBy: trackUser"></mat-row>
     <mat-row *matNoDataRow>
       <td [attr.colspan]="displayedColumns.length" class="empty">
-        {{ loading ? 'Loading...' : 'No users found' }}
+        {{ loading() ? 'Loading...' : 'No users found' }}
       </td>
     </mat-row>
   </mat-table>
 
   <mat-paginator
-    [length]="totalCount"
-    [pageIndex]="page - 1"
-    [pageSize]="pageSize"
+    [length]="totalCount()"
+    [pageIndex]="page() - 1"
+    [pageSize]="pageSize()"
     [pageSizeOptions]="[5,10,20,50]"
     (page)="onPage($event)">
   </mat-paginator>
 
-  <div class="error" *ngIf="error">{{ error }}</div>
+  @if (error()) {
+  <div class="error">{{ error() }}</div>
+  }
 </div>

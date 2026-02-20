@@ -1,4 +1,4 @@
-import { Component, Inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators, FormGroup } from '@angular/forms';
 
@@ -26,11 +26,12 @@ type DialogData =
     MatInputModule,
   ],
   templateUrl: './product-upsert-dialog.component.html',
-  styleUrl: './product-upsert-dialog.component.scss'
+  styleUrl: './product-upsert-dialog.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ProductUpsertDialogComponent {
-  loading = false;
-  error = '';
+  readonly loading = signal(false);
+  readonly error = signal('');
 
   form: FormGroup;
 
@@ -57,8 +58,8 @@ export class ProductUpsertDialogComponent {
   }
 
   private loadForEdit(id: number) {
-    this.loading = true;
-    this.error = '';
+    this.loading.set(true);
+    this.error.set('');
 
     this.products.getById(id).subscribe({
       next: (p) => {
@@ -68,11 +69,11 @@ export class ProductUpsertDialogComponent {
           barcode: p.barcode ?? '',
           minStockLevel: p.minStockLevel
         });
-        this.loading = false;
+        this.loading.set(false);
       },
       error: (e) => {
-        this.loading = false;
-        this.error = e?.message ?? 'Failed to load product.';
+        this.loading.set(false);
+        this.error.set(e?.message ?? 'Failed to load product.');
       }
     });
   }
@@ -80,8 +81,8 @@ export class ProductUpsertDialogComponent {
   save() {
     if (this.form.invalid) return;
 
-    this.loading = true;
-    this.error = '';
+    this.loading.set(true);
+    this.error.set('');
 
     const v = this.form.getRawValue();
 
@@ -97,12 +98,12 @@ export class ProductUpsertDialogComponent {
     if (this.data.mode === 'edit') {
       this.products.update(this.data.productId, payload).subscribe({
         next: () => {
-          this.loading = false;
+          this.loading.set(false);
           this.ref.close(true);
         },
         error: (e) => {
-          this.loading = false;
-          this.error = e?.message ?? 'Save failed.';
+          this.loading.set(false);
+          this.error.set(e?.message ?? 'Save failed.');
         }
       });
       return;
@@ -111,12 +112,12 @@ export class ProductUpsertDialogComponent {
     // create
     this.products.create(payload).subscribe({
       next: () => {
-        this.loading = false;
+        this.loading.set(false);
         this.ref.close(true);
       },
       error: (e) => {
-        this.loading = false;
-        this.error = e?.message ?? 'Save failed.';
+        this.loading.set(false);
+        this.error.set(e?.message ?? 'Save failed.');
       }
     });
   }

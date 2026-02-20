@@ -15,7 +15,7 @@
       <mat-label>Warehouse</mat-label>
       <mat-select formControlName="warehouseId">
         <mat-option [value]="null">All</mat-option>
-        <mat-option *ngFor="let w of warehouses" [value]="w.id">{{ w.name }} ({{ w.code }})</mat-option>
+        <mat-option *ngFor="let w of warehouses(); trackBy: trackWarehouse" [value]="w.id">{{ w.name }} ({{ w.code }})</mat-option>
       </mat-select>
     </mat-form-field>
 
@@ -23,7 +23,7 @@
       <mat-label>Product</mat-label>
       <mat-select formControlName="productId">
         <mat-option [value]="null">All</mat-option>
-        <mat-option *ngFor="let p of products" [value]="p.id">{{ p.name }} — {{ p.sku }}</mat-option>
+        <mat-option *ngFor="let p of products(); trackBy: trackProduct" [value]="p.id">{{ p.name }} — {{ p.sku }}</mat-option>
       </mat-select>
     </mat-form-field>
 
@@ -35,7 +35,7 @@
     </div>
   </form>
 
-  <mat-table [dataSource]="rows" class="mat-elevation-z1">
+  <mat-table [dataSource]="rows()" class="mat-elevation-z0">
     <ng-container matColumnDef="product">
       <mat-header-cell *matHeaderCellDef>Product</mat-header-cell>
       <mat-cell *matCellDef="let row">
@@ -64,13 +64,13 @@
     </ng-container>
 
     <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-    <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+    <mat-row *matRowDef="let row; columns: displayedColumns; trackBy: trackOverview"></mat-row>
     <mat-row *matNoDataRow>
       <td [attr.colspan]="displayedColumns.length" class="empty">
-        {{ loading ? 'Loading...' : 'No data' }}
+        {{ loading() ? 'Loading...' : 'No data' }}
       </td>
     </mat-row>
   </mat-table>
 
-  <div class="error" *ngIf="error">{{ error }}</div>
+  <div class="error" *ngIf="error()">{{ error() }}</div>
 </div>

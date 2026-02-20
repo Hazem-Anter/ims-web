@@ -40,7 +40,7 @@
   align-items: center;
   padding: 18px;
   border-radius: 14px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--mat-sys-primary) 10%, transparent);
   &.wide { grid-column: span 2; }
 }
 
@@ -58,11 +58,11 @@
 .value { font-size: 28px; font-weight: 700; line-height: 1; margin: 4px 0; }
 .hint { color: var(--mat-sys-secondary); font-size: 13px; }
 
-.bg-blue { background: linear-gradient(135deg, #4f8bff, #6c9bff); }
-.bg-purple { background: linear-gradient(135deg, #7d6bff, #a589ff); }
-.bg-amber { background: linear-gradient(135deg, #f7b733, #fc913a); }
-.bg-red { background: linear-gradient(135deg, #ff5f6d, #ffc371); }
-.bg-green { background: linear-gradient(135deg, #2bc0e4, #9cecfb); }
+.bg-blue { background: linear-gradient(135deg, var(--mat-sys-primary), color-mix(in srgb, var(--mat-sys-primary) 65%, white)); }
+.bg-purple { background: linear-gradient(135deg, var(--mat-sys-primary), color-mix(in srgb, var(--mat-sys-secondary) 70%, var(--mat-sys-primary))); }
+.bg-amber { background: linear-gradient(135deg, color-mix(in srgb, var(--mat-sys-primary) 70%, var(--mat-sys-tertiary)), var(--mat-sys-tertiary)); }
+.bg-red { background: linear-gradient(135deg, color-mix(in srgb, var(--mat-sys-error) 85%, var(--mat-sys-primary)), var(--mat-sys-error)); }
+.bg-green { background: linear-gradient(135deg, var(--mat-sys-primary), color-mix(in srgb, var(--mat-sys-primary) 65%, var(--mat-sys-tertiary))); }
 
 @media (max-width: 720px) {
   .kpi.wide { grid-column: span 1; }

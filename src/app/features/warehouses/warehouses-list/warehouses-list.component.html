@@ -31,7 +31,7 @@
     </div>
   </form>
 
-  <mat-table [dataSource]="rows" class="mat-elevation-z1">
+  <mat-table [dataSource]="rows()" class="mat-elevation-z0">
     <ng-container matColumnDef="name">
       <mat-header-cell *matHeaderCellDef> Warehouse </mat-header-cell>
       <mat-cell *matCellDef="let row">
@@ -57,34 +57,36 @@
     <ng-container matColumnDef="actions">
       <mat-header-cell *matHeaderCellDef class="actions"> </mat-header-cell>
       <mat-cell *matCellDef="let row" class="actions">
-        <button mat-icon-button matTooltip="Locations" (click)="goLocations(row)">
+        <button mat-icon-button matTooltip="Locations" aria-label="Open warehouse locations" (click)="goLocations(row)" [disabled]="loading()">
           <mat-icon>place</mat-icon>
         </button>
-        <button mat-icon-button matTooltip="Edit" (click)="openEdit(row)">
+        <button mat-icon-button matTooltip="Edit" aria-label="Edit warehouse" (click)="openEdit(row)" [disabled]="loading()">
           <mat-icon>edit</mat-icon>
         </button>
-        <button mat-icon-button matTooltip="Toggle active" (click)="toggleActive(row)">
+        <button mat-icon-button matTooltip="Toggle active" aria-label="Toggle warehouse active status" (click)="toggleActive(row)" [disabled]="loading()">
           <mat-icon>{{ row.isActive ? 'pause_circle' : 'play_circle' }}</mat-icon>
         </button>
       </mat-cell>
     </ng-container>
 
     <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-    <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+    <mat-row *matRowDef="let row; columns: displayedColumns; trackBy: trackWarehouse"></mat-row>
     <mat-row *matNoDataRow>
       <td class="empty" [attr.colspan]="displayedColumns.length">
-        {{ loading ? 'Loading...' : 'No warehouses found' }}
+        {{ loading() ? 'Loading...' : 'No warehouses found' }}
       </td>
     </mat-row>
   </mat-table>
 
   <mat-paginator
-    [length]="totalCount"
-    [pageIndex]="page - 1"
-    [pageSize]="pageSize"
+    [length]="totalCount()"
+    [pageIndex]="page() - 1"
+    [pageSize]="pageSize()"
     [pageSizeOptions]="[5,10,20,50]"
     (page)="onPage($event)">
   </mat-paginator>
 
-  <div class="error" *ngIf="error">{{ error }}</div>
+  @if (error()) {
+  <div class="error">{{ error() }}</div>
+  }
 </div>
