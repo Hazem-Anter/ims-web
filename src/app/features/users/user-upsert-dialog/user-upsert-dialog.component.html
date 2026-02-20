@@ -1,0 +1,33 @@
+<h2 mat-dialog-title>Create user</h2>
+
+<div mat-dialog-content [formGroup]="form" class="dialog-body">
+  <mat-form-field appearance="outline">
+    <mat-label>Email</mat-label>
+    <input matInput formControlName="email" />
+    <mat-error *ngIf="form.get('email')?.hasError('required')">Required</mat-error>
+    <mat-error *ngIf="form.get('email')?.hasError('email')">Invalid email</mat-error>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Password</mat-label>
+    <input matInput type="password" formControlName="password" />
+    <mat-error *ngIf="form.get('password')?.hasError('required')">Required</mat-error>
+    <mat-error *ngIf="form.get('password')?.hasError('minlength')">Min 6 chars</mat-error>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Roles</mat-label>
+    <mat-select formControlName="roles" multiple>
+      <mat-option *ngFor="let r of roles" [value]="r">{{ r }}</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <div class="error" *ngIf="error">{{ error }}</div>
+</div>
+
+<div mat-dialog-actions align="end">
+  <button mat-button (click)="close()">Cancel</button>
+  <button mat-raised-button color="primary" (click)="save()" [disabled]="loading || form.invalid">
+    Create
+  </button>
+</div>

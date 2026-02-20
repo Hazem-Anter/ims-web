@@ -1,0 +1,72 @@
+<h2 mat-dialog-title>Manage user</h2>
+
+<div mat-dialog-content class="dialog-body" *ngIf="user">
+  <div class="summary">
+    <div>
+      <div class="label">Email</div>
+      <div class="value">{{ user.email }}</div>
+    </div>
+    <div>
+      <div class="label">Username</div>
+      <div class="value">{{ user.userName }}</div>
+    </div>
+    <div>
+      <div class="label">Status</div>
+      <mat-chip color="primary" *ngIf="!user.lockoutEnd" selected>Active</mat-chip>
+      <mat-chip color="warn" *ngIf="user.lockoutEnd" selected>Deactivated</mat-chip>
+    </div>
+  </div>
+
+  <section>
+    <div class="section-head">
+      <h4>Roles</h4>
+      <button mat-button color="primary" (click)="toggleActive()">
+        <mat-icon>{{ user.lockoutEnd ? 'play_arrow' : 'pause' }}</mat-icon>
+        {{ user.lockoutEnd ? 'Activate' : 'Deactivate' }}
+      </button>
+    </div>
+
+    <mat-chip-set>
+      <mat-chip *ngFor="let r of user.roles" color="primary" selected (removed)="removeRole(r)">
+        {{ r }}
+        <button matChipRemove mat-icon-button>
+          <mat-icon>close</mat-icon>
+        </button>
+      </mat-chip>
+      <div *ngIf="user.roles.length === 0" class="muted">No roles assigned.</div>
+    </mat-chip-set>
+
+    <form class="inline" [formGroup]="roleForm">
+      <mat-form-field appearance="outline">
+        <mat-label>Add role</mat-label>
+        <mat-select formControlName="role">
+          <mat-option *ngFor="let r of roles" [value]="r">{{ r }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <button mat-raised-button color="primary" type="button" (click)="addRole()" [disabled]="roleForm.invalid">
+        Add
+      </button>
+    </form>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h4>Reset password</h4>
+    </div>
+    <form class="inline" [formGroup]="passwordForm">
+      <mat-form-field appearance="outline">
+        <mat-label>New password</mat-label>
+        <input matInput type="password" formControlName="password" />
+      </mat-form-field>
+      <button mat-raised-button color="primary" type="button" (click)="resetPassword()" [disabled]="passwordForm.invalid">
+        Reset
+      </button>
+    </form>
+  </section>
+
+  <div class="error" *ngIf="error">{{ error }}</div>
+</div>
+
+<div mat-dialog-actions align="end">
+  <button mat-button (click)="close()">Close</button>
+</div>

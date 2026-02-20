@@ -1,0 +1,90 @@
+<div class="page">
+  <div class="head">
+    <div>
+      <h2>Warehouses</h2>
+      <p class="muted">Manage storage sites and their availability.</p>
+    </div>
+    <button mat-raised-button color="primary" (click)="openCreate()">
+      <mat-icon>add</mat-icon>
+      New warehouse
+    </button>
+  </div>
+
+  <form class="filters" [formGroup]="filterForm">
+    <mat-form-field appearance="outline">
+      <mat-label>Search</mat-label>
+      <input matInput formControlName="search" placeholder="Name or code" (keyup.enter)="applyFilters()" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Status</mat-label>
+      <mat-select formControlName="isActive">
+        <mat-option [value]="null">All</mat-option>
+        <mat-option [value]="true">Active</mat-option>
+        <mat-option [value]="false">Inactive</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <div class="filter-actions">
+      <button mat-stroked-button color="primary" type="button" (click)="applyFilters()">Apply</button>
+      <button mat-button type="button" (click)="clearFilters()">Reset</button>
+    </div>
+  </form>
+
+  <mat-table [dataSource]="rows" class="mat-elevation-z1">
+    <ng-container matColumnDef="name">
+      <mat-header-cell *matHeaderCellDef> Warehouse </mat-header-cell>
+      <mat-cell *matCellDef="let row">
+        <div class="title">{{ row.name }}</div>
+        <div class="sub">ID #{{ row.id }}</div>
+      </mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="code">
+      <mat-header-cell *matHeaderCellDef> Code </mat-header-cell>
+      <mat-cell *matCellDef="let row">{{ row.code }}</mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="status">
+      <mat-header-cell *matHeaderCellDef> Status </mat-header-cell>
+      <mat-cell *matCellDef="let row">
+        <mat-chip-set>
+          <mat-chip [color]="row.isActive ? 'primary' : 'warn'" selected>{{ row.isActive ? 'Active' : 'Inactive' }}</mat-chip>
+        </mat-chip-set>
+      </mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="actions">
+      <mat-header-cell *matHeaderCellDef class="actions"> </mat-header-cell>
+      <mat-cell *matCellDef="let row" class="actions">
+        <button mat-icon-button matTooltip="Locations" (click)="goLocations(row)">
+          <mat-icon>place</mat-icon>
+        </button>
+        <button mat-icon-button matTooltip="Edit" (click)="openEdit(row)">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button mat-icon-button matTooltip="Toggle active" (click)="toggleActive(row)">
+          <mat-icon>{{ row.isActive ? 'pause_circle' : 'play_circle' }}</mat-icon>
+        </button>
+      </mat-cell>
+    </ng-container>
+
+    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+    <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+    <mat-row *matNoDataRow>
+      <td class="empty" [attr.colspan]="displayedColumns.length">
+        {{ loading ? 'Loading...' : 'No warehouses found' }}
+      </td>
+    </mat-row>
+  </mat-table>
+
+  <mat-paginator
+    [length]="totalCount"
+    [pageIndex]="page - 1"
+    [pageSize]="pageSize"
+    [pageSizeOptions]="[5,10,20,50]"
+    (page)="onPage($event)">
+  </mat-paginator>
+
+  <div class="error" *ngIf="error">{{ error }}</div>
+</div>

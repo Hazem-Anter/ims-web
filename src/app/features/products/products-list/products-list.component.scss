@@ -1,0 +1,21 @@
+.page { display:block; }
+.header { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:16px; }
+.muted { color:#6b7280; margin-top:6px; }
+
+.filters { display:flex; flex-direction:column; gap:10px; margin-bottom:12px; }
+.filter-row { display:grid; grid-template-columns: 1.5fr 0.8fr auto; gap:12px; align-items:end; }
+.filter-actions { display:flex; gap:10px; justify-content:flex-end; }
+
+.barcode-row { display:flex; gap:12px; align-items:end; }
+.barcode { flex:1; }
+
+.table-card { background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:12px; }
+.actions { display:flex; align-items:center; gap:8px; }
+
+.pill { padding:4px 10px; border-radius:999px; font-size:12px; font-weight:600; }
+.pill.active { background:#e8f5e9; color:#1b5e20; }
+.pill.inactive { background:#fff3e0; color:#e65100; }
+
+.error { margin:10px 0; color:#b00020; }
+
+.loading { padding:12px; color:#6b7280; }

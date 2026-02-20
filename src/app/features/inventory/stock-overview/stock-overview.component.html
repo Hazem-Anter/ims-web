@@ -1,0 +1,76 @@
+<div class="page">
+  <div class="head">
+    <div>
+      <h3>Stock Overview</h3>
+      <p class="muted">Quantities on hand by product, warehouse, and location.</p>
+    </div>
+    <a mat-stroked-button color="primary" routerLink="/inventory">
+      <mat-icon>sync_alt</mat-icon>
+      Transactions
+    </a>
+  </div>
+
+  <form class="filters" [formGroup]="filterForm">
+    <mat-form-field appearance="outline">
+      <mat-label>Warehouse</mat-label>
+      <mat-select formControlName="warehouseId">
+        <mat-option [value]="null">All</mat-option>
+        <mat-option *ngFor="let w of warehouses" [value]="w.id">{{ w.name }} ({{ w.code }})</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Product</mat-label>
+      <mat-select formControlName="productId">
+        <mat-option [value]="null">All</mat-option>
+        <mat-option *ngFor="let p of products" [value]="p.id">{{ p.name }} — {{ p.sku }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-checkbox formControlName="lowStockOnly">Show low stock only</mat-checkbox>
+
+    <div class="filter-actions">
+      <button mat-stroked-button color="primary" type="button" (click)="apply()">Apply</button>
+      <button mat-button type="button" (click)="clear()">Reset</button>
+    </div>
+  </form>
+
+  <mat-table [dataSource]="rows" class="mat-elevation-z1">
+    <ng-container matColumnDef="product">
+      <mat-header-cell *matHeaderCellDef>Product</mat-header-cell>
+      <mat-cell *matCellDef="let row">
+        <div class="title">{{ row.productName }}</div>
+        <div class="sub">{{ row.sku }}</div>
+      </mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="warehouse">
+      <mat-header-cell *matHeaderCellDef>Warehouse</mat-header-cell>
+      <mat-cell *matCellDef="let row">{{ row.warehouseCode }}</mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="location">
+      <mat-header-cell *matHeaderCellDef>Location</mat-header-cell>
+      <mat-cell *matCellDef="let row">{{ row.locationCode || '—' }}</mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="qty">
+      <mat-header-cell *matHeaderCellDef>On hand</mat-header-cell>
+      <mat-cell *matCellDef="let row">
+        <mat-chip-set>
+          <mat-chip color="primary" selected>{{ row.quantityOnHand }}</mat-chip>
+        </mat-chip-set>
+      </mat-cell>
+    </ng-container>
+
+    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+    <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+    <mat-row *matNoDataRow>
+      <td [attr.colspan]="displayedColumns.length" class="empty">
+        {{ loading ? 'Loading...' : 'No data' }}
+      </td>
+    </mat-row>
+  </mat-table>
+
+  <div class="error" *ngIf="error">{{ error }}</div>
+</div>

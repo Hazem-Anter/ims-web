@@ -1,0 +1,279 @@
+<div class="reports">
+  <h2>Reports & Analytics</h2>
+  <p class="muted">Transactional visibility plus forward-looking risk signals.</p>
+
+  <mat-tab-group>
+    <mat-tab label="Stock movements">
+      <div class="section">
+        <form class="filters" [formGroup]="movementsForm">
+          <mat-form-field appearance="outline">
+            <mat-label>From (UTC)</mat-label>
+            <input matInput type="date" formControlName="fromUtc" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>To (UTC)</mat-label>
+            <input matInput type="date" formControlName="toUtc" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Warehouse</mat-label>
+            <mat-select formControlName="warehouseId">
+              <mat-option [value]="null">All</mat-option>
+              <mat-option *ngFor="let w of warehouses" [value]="w.id">{{ w.name }} ({{ w.code }})</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Product</mat-label>
+            <mat-select formControlName="productId">
+              <mat-option [value]="null">All</mat-option>
+              <mat-option *ngFor="let p of products" [value]="p.id">{{ p.name }} — {{ p.sku }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <div class="filter-actions">
+            <button mat-stroked-button color="primary" type="button" (click)="loadMovements()">Apply</button>
+            <button mat-button type="button" (click)="resetMovements()">Reset</button>
+          </div>
+        </form>
+
+        <mat-table [dataSource]="movementRows" class="mat-elevation-z1">
+          <ng-container matColumnDef="createAt">
+            <mat-header-cell *matHeaderCellDef>Date</mat-header-cell>
+            <mat-cell *matCellDef="let row">{{ row.createAt | date:'yyyy-MM-dd HH:mm' }}</mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="type">
+            <mat-header-cell *matHeaderCellDef>Type</mat-header-cell>
+            <mat-cell *matCellDef="let row">
+              <mat-chip color="primary" selected>{{ row.type }}</mat-chip>
+            </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="qty">
+            <mat-header-cell *matHeaderCellDef>Qty</mat-header-cell>
+            <mat-cell *matCellDef="let row">{{ row.quantityDelta }}</mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="warehouse">
+            <mat-header-cell *matHeaderCellDef>Warehouse</mat-header-cell>
+            <mat-cell *matCellDef="let row">{{ row.warehouseCode }}</mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="location">
+            <mat-header-cell *matHeaderCellDef>Location</mat-header-cell>
+            <mat-cell *matCellDef="let row">{{ row.locationCode || '—' }}</mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="ref">
+            <mat-header-cell *matHeaderCellDef>Reference</mat-header-cell>
+            <mat-cell *matCellDef="let row">
+              <div class="sub">{{ row.referenceType || '—' }}</div>
+              <div class="title">{{ row.referenceId || '' }}</div>
+            </mat-cell>
+          </ng-container>
+
+          <mat-header-row *matHeaderRowDef="movementColumns"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: movementColumns;"></mat-row>
+          <mat-row *matNoDataRow>
+            <td [attr.colspan]="movementColumns.length" class="empty">
+              {{ mvLoading ? 'Loading...' : 'No movements in range' }}
+            </td>
+          </mat-row>
+        </mat-table>
+
+        <mat-paginator
+          [length]="mvTotal"
+          [pageIndex]="mvPage - 1"
+          [pageSize]="mvPageSize"
+          [pageSizeOptions]="[20,50,100,150]"
+          (page)="mvPageChange($event)">
+        </mat-paginator>
+
+        <div class="error" *ngIf="mvError">{{ mvError }}</div>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Low stock">
+      <div class="section">
+        <form class="filters" [formGroup]="lowForm">
+          <mat-form-field appearance="outline">
+            <mat-label>Warehouse</mat-label>
+            <mat-select formControlName="warehouseId">
+              <mat-option [value]="null">All</mat-option>
+              <mat-option *ngFor="let w of warehouses" [value]="w.id">{{ w.name }} ({{ w.code }})</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Product</mat-label>
+            <mat-select formControlName="productId">
+              <mat-option [value]="null">All</mat-option>
+              <mat-option *ngFor="let p of products" [value]="p.id">{{ p.name }} — {{ p.sku }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <div class="filter-actions">
+            <button mat-stroked-button color="primary" type="button" (click)="loadLowStock()">Apply</button>
+            <button mat-button type="button" (click)="resetLow()">Reset</button>
+          </div>
+        </form>
+
+        <mat-table [dataSource]="lowRows" class="mat-elevation-z1">
+          <ng-container matColumnDef="product">
+            <mat-header-cell *matHeaderCellDef>Product</mat-header-cell>
+            <mat-cell *matCellDef="let row">
+              <div class="title">{{ row.productName }}</div>
+              <div class="sub">{{ row.sku }}</div>
+            </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="warehouse">
+            <mat-header-cell *matHeaderCellDef>Warehouse</mat-header-cell>
+            <mat-cell *matCellDef="let row">{{ row.warehouseCode }}</mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="location">
+            <mat-header-cell *matHeaderCellDef>Location</mat-header-cell>
+            <mat-cell *matCellDef="let row">{{ row.locationCode || '—' }}</mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="qty">
+            <mat-header-cell *matHeaderCellDef>On hand</mat-header-cell>
+            <mat-cell *matCellDef="let row">{{ row.quantityOnHand }}</mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="shortage">
+            <mat-header-cell *matHeaderCellDef>Shortage</mat-header-cell>
+            <mat-cell *matCellDef="let row">
+              <mat-chip color="warn" selected>-{{ row.shortage }}</mat-chip>
+            </mat-cell>
+          </ng-container>
+          <mat-header-row *matHeaderRowDef="lowColumns"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: lowColumns;"></mat-row>
+          <mat-row *matNoDataRow>
+            <td [attr.colspan]="lowColumns.length" class="empty">
+              {{ lowLoading ? 'Loading...' : 'No low stock items' }}
+            </td>
+          </mat-row>
+        </mat-table>
+        <div class="error" *ngIf="lowError">{{ lowError }}</div>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Dead stock">
+      <div class="section">
+        <form class="filters" [formGroup]="deadForm">
+          <mat-form-field appearance="outline">
+            <mat-label>Days without movement</mat-label>
+            <input matInput type="number" min="1" formControlName="days" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Warehouse</mat-label>
+            <mat-select formControlName="warehouseId">
+              <mat-option [value]="null">All</mat-option>
+              <mat-option *ngFor="let w of warehouses" [value]="w.id">{{ w.name }} ({{ w.code }})</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <div class="filter-actions">
+            <button mat-stroked-button color="primary" type="button" (click)="loadDeadStock()">Apply</button>
+            <button mat-button type="button" (click)="resetDead()">Reset</button>
+          </div>
+        </form>
+
+        <mat-table [dataSource]="deadRows" class="mat-elevation-z1">
+          <ng-container matColumnDef="product">
+            <mat-header-cell *matHeaderCellDef>Product</mat-header-cell>
+            <mat-cell *matCellDef="let row">
+              <div class="title">{{ row.productName }}</div>
+              <div class="sub">{{ row.sku }}</div>
+            </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="warehouse">
+            <mat-header-cell *matHeaderCellDef>Warehouse</mat-header-cell>
+            <mat-cell *matCellDef="let row">{{ row.warehouseCode }}</mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="qty">
+            <mat-header-cell *matHeaderCellDef>On hand</mat-header-cell>
+            <mat-cell *matCellDef="let row">{{ row.quantityOnHand }}</mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="lastMovement">
+            <mat-header-cell *matHeaderCellDef>Last movement</mat-header-cell>
+            <mat-cell *matCellDef="let row">{{ row.lastMovementAtUtc | date:'yyyy-MM-dd' }}</mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="days">
+            <mat-header-cell *matHeaderCellDef>Days idle</mat-header-cell>
+            <mat-cell *matCellDef="let row">{{ row.daysSinceLastMovement }}</mat-cell>
+          </ng-container>
+          <mat-header-row *matHeaderRowDef="deadColumns"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: deadColumns;"></mat-row>
+          <mat-row *matNoDataRow>
+            <td [attr.colspan]="deadColumns.length" class="empty">
+              {{ deadLoading ? 'Loading...' : 'No dead stock items' }}
+            </td>
+          </mat-row>
+        </mat-table>
+
+        <div class="error" *ngIf="deadError">{{ deadError }}</div>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Stock valuation">
+      <div class="section">
+        <form class="filters" [formGroup]="valuationForm">
+          <mat-form-field appearance="outline">
+            <mat-label>Mode</mat-label>
+            <mat-select formControlName="mode">
+              <mat-option value="Fifo">FIFO</mat-option>
+              <mat-option value="WeightedAverage">Weighted average</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Warehouse</mat-label>
+            <mat-select formControlName="warehouseId">
+              <mat-option [value]="null">All</mat-option>
+              <mat-option *ngFor="let w of warehouses" [value]="w.id">{{ w.name }} ({{ w.code }})</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Product</mat-label>
+            <mat-select formControlName="productId">
+              <mat-option [value]="null">All</mat-option>
+              <mat-option *ngFor="let p of products" [value]="p.id">{{ p.name }} — {{ p.sku }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <div class="filter-actions">
+            <button mat-stroked-button color="primary" type="button" (click)="loadValuation()">Apply</button>
+            <button mat-button type="button" (click)="resetValuation()">Reset</button>
+          </div>
+        </form>
+
+        <mat-table [dataSource]="valRows" class="mat-elevation-z1">
+          <ng-container matColumnDef="product">
+            <mat-header-cell *matHeaderCellDef>Product</mat-header-cell>
+            <mat-cell *matCellDef="let row">
+              <div class="title">{{ row.productName }}</div>
+              <div class="sub">{{ row.sku }}</div>
+            </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="warehouse">
+            <mat-header-cell *matHeaderCellDef>Warehouse</mat-header-cell>
+            <mat-cell *matCellDef="let row">{{ row.warehouseCode }}</mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="location">
+            <mat-header-cell *matHeaderCellDef>Location</mat-header-cell>
+            <mat-cell *matCellDef="let row">{{ row.locationCode || '—' }}</mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="qty">
+            <mat-header-cell *matHeaderCellDef>Qty</mat-header-cell>
+            <mat-cell *matCellDef="let row">{{ row.quantityOnHand }}</mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="unitCost">
+            <mat-header-cell *matHeaderCellDef>Unit cost</mat-header-cell>
+            <mat-cell *matCellDef="let row">{{ row.unitCost ?? 0 | currency:'USD':'symbol':'1.2-2' }}</mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="totalValue">
+            <mat-header-cell *matHeaderCellDef>Total value</mat-header-cell>
+            <mat-cell *matCellDef="let row">{{ row.totalValue | currency:'USD':'symbol':'1.0-0' }}</mat-cell>
+          </ng-container>
+
+          <mat-header-row *matHeaderRowDef="valColumns"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: valColumns;"></mat-row>
+          <mat-row *matNoDataRow>
+            <td [attr.colspan]="valColumns.length" class="empty">
+              {{ valLoading ? 'Loading...' : 'No valuation rows' }}
+            </td>
+          </mat-row>
+        </mat-table>
+
+        <div class="error" *ngIf="valError">{{ valError }}</div>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>

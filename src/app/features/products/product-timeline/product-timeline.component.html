@@ -1,0 +1,91 @@
+<div class="page">
+  <div class="header">
+    <div>
+      <h2>Product Timeline</h2>
+      <p class="muted">Stock movements for Product ID: {{ productId }}</p>
+    </div>
+
+    <div class="header-actions">
+      <button mat-stroked-button (click)="clear()">Clear</button>
+      <button mat-flat-button color="primary" (click)="apply()">Apply</button>
+    </div>
+  </div>
+
+  <div class="filters">
+    <mat-form-field appearance="outline">
+      <mat-label>From (UTC)</mat-label>
+      <input matInput type="datetime-local" formControlName="fromUtc" [formGroup]="filterForm" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>To (UTC)</mat-label>
+      <input matInput type="datetime-local" formControlName="toUtc" [formGroup]="filterForm" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Warehouse</mat-label>
+      <mat-select formControlName="warehouseId" [formGroup]="filterForm">
+        <mat-option [value]="null">All</mat-option>
+        <mat-option *ngFor="let w of warehouses" [value]="w.id">
+          {{ w.code ? (w.code + ' - ') : '' }}{{ w.name }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <div class="error" *ngIf="error">{{ error }}</div>
+
+  <div class="table-card">
+    <table mat-table [dataSource]="rows" class="mat-elevation-z0">
+
+      <ng-container matColumnDef="createAt">
+        <th mat-header-cell *matHeaderCellDef>Date</th>
+        <td mat-cell *matCellDef="let r">{{ r.createAt | date:'yyyy-MM-dd HH:mm' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="type">
+        <th mat-header-cell *matHeaderCellDef>Type</th>
+        <td mat-cell *matCellDef="let r">{{ r.type }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="qty">
+        <th mat-header-cell *matHeaderCellDef>Qty Δ</th>
+        <td mat-cell *matCellDef="let r">{{ r.quantityDelta }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="warehouse">
+        <th mat-header-cell *matHeaderCellDef>Warehouse</th>
+        <td mat-cell *matCellDef="let r">{{ r.warehouseCode }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="location">
+        <th mat-header-cell *matHeaderCellDef>Location</th>
+        <td mat-cell *matCellDef="let r">{{ r.locationCode || '-' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="unitCost">
+        <th mat-header-cell *matHeaderCellDef>Unit Cost</th>
+        <td mat-cell *matCellDef="let r">{{ r.unitCost ?? '-' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="ref">
+        <th mat-header-cell *matHeaderCellDef>Reference</th>
+        <td mat-cell *matCellDef="let r">{{ r.referenceType || '-' }} {{ r.referenceId || '' }}</td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+    </table>
+
+    <mat-paginator
+      [length]="totalCount"
+      [pageSize]="pageSize"
+      [pageIndex]="page - 1"
+      [pageSizeOptions]="[50, 100, 200]"
+      (page)="onPage($event)">
+    </mat-paginator>
+
+    <div class="loading" *ngIf="loading">Loading...</div>
+  </div>
+</div>

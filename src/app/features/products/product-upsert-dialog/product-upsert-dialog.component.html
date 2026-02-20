@@ -1,0 +1,98 @@
+<h2 mat-dialog-title>
+  {{ isEdit ? 'Edit Product' : 'Create Product' }}
+</h2>
+
+<div mat-dialog-content>
+
+  <form [formGroup]="form" class="form">
+
+    <!-- Name -->
+    <mat-form-field appearance="outline">
+      <mat-label>Name</mat-label>
+
+      <input matInput formControlName="name" />
+
+      <mat-error *ngIf="form.get('name')?.hasError('required')">
+        Name is required
+      </mat-error>
+
+      <mat-error *ngIf="form.get('name')?.hasError('minlength')">
+        Minimum 2 characters
+      </mat-error>
+
+    </mat-form-field>
+
+
+    <!-- SKU -->
+    <mat-form-field appearance="outline">
+      <mat-label>SKU</mat-label>
+
+      <input matInput formControlName="sku" />
+
+      <mat-error *ngIf="form.get('sku')?.hasError('required')">
+        SKU is required
+      </mat-error>
+
+      <mat-error *ngIf="form.get('sku')?.hasError('minlength')">
+        Minimum 2 characters
+      </mat-error>
+
+    </mat-form-field>
+
+
+    <!-- Barcode -->
+    <mat-form-field appearance="outline">
+      <mat-label>Barcode (optional)</mat-label>
+
+      <input matInput formControlName="barcode" />
+
+    </mat-form-field>
+
+
+    <!-- Min Stock -->
+    <mat-form-field appearance="outline">
+      <mat-label>Min Stock Level</mat-label>
+
+      <input
+        matInput
+        type="number"
+        min="0"
+        formControlName="minStockLevel"
+      />
+
+      <mat-error *ngIf="form.get('minStockLevel')?.hasError('required')">
+        Required
+      </mat-error>
+
+    </mat-form-field>
+
+
+    <!-- Error message -->
+    <div class="error" *ngIf="error">
+      {{ error }}
+    </div>
+
+  </form>
+
+</div>
+
+<div mat-dialog-actions align="end">
+
+  <button
+    mat-button
+    (click)="close()"
+    [disabled]="loading"
+  >
+    Cancel
+  </button>
+
+  <button
+    mat-flat-button
+    color="primary"
+    (click)="save()"
+    [disabled]="loading || form.invalid"
+  >
+    {{ loading ? 'Saving...' : 'Save' }}
+  </button>
+
+</div>

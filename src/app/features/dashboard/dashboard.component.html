@@ -1,2 +1,67 @@
-<h2>Dashboard</h2>
-<p>IMS is running.</p>
+<div class="dashboard">
+  <div class="header">
+    <div>
+      <h2>Inventory Pulse</h2>
+      <p class="muted">Real-time snapshot of stock health across warehouses.</p>
+    </div>
+    <button mat-stroked-button color="primary" (click)="load()">Refresh</button>
+  </div>
+
+  <div class="state" *ngIf="loading">
+    <mat-spinner diameter="36"></mat-spinner>
+    <span>Loading metrics…</span>
+  </div>
+
+  <div class="state error" *ngIf="!loading && error">
+    <mat-icon color="warn">error</mat-icon>
+    <span>{{ error }}</span>
+    <button mat-button color="primary" (click)="load()">Retry</button>
+  </div>
+
+  <div class="cards" *ngIf="!loading && data">
+    <mat-card class="kpi">
+      <div class="icon bg-blue"><mat-icon>inventory</mat-icon></div>
+      <div>
+        <div class="label">Total Products</div>
+        <div class="value">{{ data.totalProducts }}</div>
+        <div class="hint">{{ data.activeProducts }} active</div>
+      </div>
+    </mat-card>
+
+    <mat-card class="kpi">
+      <div class="icon bg-purple"><mat-icon>store</mat-icon></div>
+      <div>
+        <div class="label">Warehouses</div>
+        <div class="value">{{ data.totalWarehouses }}</div>
+        <div class="hint">{{ data.activeWarehouses }} operating</div>
+      </div>
+    </mat-card>
+
+    <mat-card class="kpi warn">
+      <div class="icon bg-amber"><mat-icon>warning</mat-icon></div>
+      <div>
+        <div class="label">Low Stock Items</div>
+        <div class="value">{{ data.lowStockItems }}</div>
+        <div class="hint">Needs attention</div>
+      </div>
+    </mat-card>
+
+    <mat-card class="kpi danger">
+      <div class="icon bg-red"><mat-icon>do_not_disturb_on</mat-icon></div>
+      <div>
+        <div class="label">Dead Stock</div>
+        <div class="value">{{ data.deadStockItems }}</div>
+        <div class="hint">No movement</div>
+      </div>
+    </mat-card>
+
+    <mat-card class="kpi wide">
+      <div class="icon bg-green"><mat-icon>payments</mat-icon></div>
+      <div>
+        <div class="label">Total Stock Value</div>
+        <div class="value">{{ data.totalStockValue | currency:'USD':'symbol':'1.0-0' }}</div>
+        <div class="hint">FIFO / Weighted average as per report</div>
+      </div>
+    </mat-card>
+  </div>
+</div>

@@ -1,10 +1,74 @@
-<app-table
-  title="Users (Admin)"
-  [columns]="columns"
-  [items]="rows"
-  [totalCount]="totalCount"
-  [page]="page"
-  [pageSize]="pageSize"
-  (pageChange)="onPage($event)"
-  (searchChange)="onSearch($event)">
-</app-table>
+<div class="page">
+  <div class="head">
+    <div>
+      <h2>Users & Roles</h2>
+      <p class="muted">Administer platform access and credentials.</p>
+    </div>
+    <button mat-raised-button color="primary" (click)="openCreate()">
+      <mat-icon>person_add</mat-icon>
+      New user
+    </button>
+  </div>
+
+  <form class="filters" [formGroup]="filterForm">
+    <mat-form-field appearance="outline">
+      <mat-label>Search email or username</mat-label>
+      <input matInput formControlName="search" (keyup.enter)="search()" />
+    </mat-form-field>
+    <div class="filter-actions">
+      <button mat-stroked-button color="primary" type="button" (click)="search()">Apply</button>
+      <button mat-button type="button" (click)="clear()">Reset</button>
+    </div>
+  </form>
+
+  <mat-table [dataSource]="rows" class="mat-elevation-z1">
+    <ng-container matColumnDef="email">
+      <mat-header-cell *matHeaderCellDef>Email</mat-header-cell>
+      <mat-cell *matCellDef="let row">
+        <div class="title">{{ row.email }}</div>
+        <div class="sub">ID #{{ row.id }}</div>
+      </mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="userName">
+      <mat-header-cell *matHeaderCellDef>Username</mat-header-cell>
+      <mat-cell *matCellDef="let row">{{ row.userName }}</mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="status">
+      <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
+      <mat-cell *matCellDef="let row">
+        <mat-chip color="primary" *ngIf="getStatus(row) === 'active'" selected>Active</mat-chip>
+        <mat-chip color="warn" *ngIf="getStatus(row) === 'locked'" selected>Deactivated</mat-chip>
+      </mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="actions">
+      <mat-header-cell *matHeaderCellDef class="actions"></mat-header-cell>
+      <mat-cell *matCellDef="let row" class="actions">
+        <button mat-stroked-button color="primary" (click)="openManage(row)">
+          <mat-icon>manage_accounts</mat-icon>
+          Manage
+        </button>
+      </mat-cell>
+    </ng-container>
+
+    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+    <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+    <mat-row *matNoDataRow>
+      <td [attr.colspan]="displayedColumns.length" class="empty">
+        {{ loading ? 'Loading...' : 'No users found' }}
+      </td>
+    </mat-row>
+  </mat-table>
+
+  <mat-paginator
+    [length]="totalCount"
+    [pageIndex]="page - 1"
+    [pageSize]="pageSize"
+    [pageSizeOptions]="[5,10,20,50]"
+    (page)="onPage($event)">
+  </mat-paginator>
+
+  <div class="error" *ngIf="error">{{ error }}</div>
+</div>

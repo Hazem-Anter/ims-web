@@ -1,0 +1,11 @@
+.dialog-body { display: flex; flex-direction: column; gap: 16px; min-width: 520px; }
+.summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.label { color: var(--mat-sys-outline); font-size: 12px; text-transform: uppercase; letter-spacing: .6px; }
+.value { font-weight: 600; }
+
+section { display: flex; flex-direction: column; gap: 10px; }
+.section-head { display: flex; align-items: center; justify-content: space-between; }
+
+.inline { display: flex; gap: 10px; align-items: end; flex-wrap: wrap; }
+.muted { color: var(--mat-sys-outline); }
+.error { color: var(--mat-sys-error); }

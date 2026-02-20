@@ -1,0 +1,123 @@
+<div class="page">
+
+  <div class="header">
+    <div>
+      <h2>Products</h2>
+      <p class="muted">Manage product master data. Search, create, edit, activate/deactivate.</p>
+    </div>
+
+    <button mat-raised-button color="primary" (click)="openCreate()">
+      <mat-icon>add</mat-icon>
+      New Product
+    </button>
+  </div>
+
+  <div class="filters">
+    <form [formGroup]="filterForm" class="filter-row" (ngSubmit)="applyFilters()">
+
+      <mat-form-field appearance="outline">
+        <mat-label>Search</mat-label>
+        <input matInput formControlName="search" placeholder="Name / SKU / Barcode" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Status</mat-label>
+        <mat-select formControlName="isActive">
+          <mat-option [value]="null">All</mat-option>
+          <mat-option [value]="true">Active</mat-option>
+          <mat-option [value]="false">Inactive</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <div class="filter-actions">
+        <button mat-stroked-button type="button" (click)="clearFilters()">Clear</button>
+        <button mat-flat-button color="primary" type="submit">Apply</button>
+      </div>
+
+    </form>
+
+    <form [formGroup]="barcodeForm" class="barcode-row" (ngSubmit)="findByBarcode()">
+      <mat-form-field appearance="outline" class="barcode">
+        <mat-label>Find by barcode</mat-label>
+        <input matInput formControlName="barcode" placeholder="Scan / type barcode" />
+      </mat-form-field>
+
+      <button mat-flat-button color="accent" type="submit">
+        <mat-icon>search</mat-icon>
+        Find
+      </button>
+    </form>
+  </div>
+
+  <div class="error" *ngIf="error">{{ error }}</div>
+
+  <div class="table-card">
+    <table mat-table [dataSource]="rows" class="mat-elevation-z0">
+
+      <ng-container matColumnDef="id">
+        <th mat-header-cell *matHeaderCellDef>ID</th>
+        <td mat-cell *matCellDef="let r">{{ r.id }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef>Name</th>
+        <td mat-cell *matCellDef="let r">{{ r.name }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="sku">
+        <th mat-header-cell *matHeaderCellDef>SKU</th>
+        <td mat-cell *matCellDef="let r">{{ r.sku }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="barcode">
+        <th mat-header-cell *matHeaderCellDef>Barcode</th>
+        <td mat-cell *matCellDef="let r">{{ r.barcode || '-' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="minStockLevel">
+        <th mat-header-cell *matHeaderCellDef>Min</th>
+        <td mat-cell *matCellDef="let r">{{ r.minStockLevel }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="isActive">
+        <th mat-header-cell *matHeaderCellDef>Status</th>
+        <td mat-cell *matCellDef="let r">
+          <span class="pill" [class.active]="r.isActive" [class.inactive]="!r.isActive">
+            {{ r.isActive ? 'Active' : 'Inactive' }}
+          </span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>Actions</th>
+        <td mat-cell *matCellDef="let r" class="actions">
+          <button mat-icon-button (click)="openEdit(r)" aria-label="Edit">
+            <mat-icon>edit</mat-icon>
+          </button>
+
+          <button mat-icon-button (click)="toggleActive(r)" aria-label="Toggle">
+            <mat-icon>{{ r.isActive ? 'toggle_off' : 'toggle_on' }}</mat-icon>
+          </button>
+
+          <button mat-stroked-button (click)="goTimeline(r)">
+            Timeline
+          </button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+    </table>
+
+    <mat-paginator
+      [length]="totalCount"
+      [pageSize]="pageSize"
+      [pageIndex]="page - 1"
+      [pageSizeOptions]="[10, 20, 50]"
+      (page)="onPage($event)">
+    </mat-paginator>
+
+    <div class="loading" *ngIf="loading">Loading...</div>
+  </div>
+</div>
