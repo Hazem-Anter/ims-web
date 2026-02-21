@@ -31,60 +31,73 @@
     </div>
   </form>
 
-  <mat-table [dataSource]="rows()" class="mat-elevation-z0">
-    <ng-container matColumnDef="name">
-      <mat-header-cell *matHeaderCellDef> Warehouse </mat-header-cell>
-      <mat-cell *matCellDef="let row">
-        <div class="title">{{ row.name }}</div>
-        <div class="sub">ID #{{ row.id }}</div>
-      </mat-cell>
-    </ng-container>
+  <div class="table-card">
+    <table mat-table [dataSource]="rows()" class="mat-elevation-z0" *ngIf="rows().length">
+      <ng-container matColumnDef="name">
+        <mat-header-cell *matHeaderCellDef> Warehouse </mat-header-cell>
+        <mat-cell *matCellDef="let row">
+          <div class="title">{{ row.name }}</div>
+          <div class="sub">ID #{{ row.id }}</div>
+        </mat-cell>
+      </ng-container>
 
-    <ng-container matColumnDef="code">
-      <mat-header-cell *matHeaderCellDef> Code </mat-header-cell>
-      <mat-cell *matCellDef="let row">{{ row.code }}</mat-cell>
-    </ng-container>
+      <ng-container matColumnDef="code">
+        <mat-header-cell *matHeaderCellDef> Code </mat-header-cell>
+        <mat-cell *matCellDef="let row">{{ row.code }}</mat-cell>
+      </ng-container>
 
-    <ng-container matColumnDef="status">
-      <mat-header-cell *matHeaderCellDef> Status </mat-header-cell>
-      <mat-cell *matCellDef="let row">
-        <mat-chip-set>
-          <mat-chip [color]="row.isActive ? 'primary' : 'warn'" selected>{{ row.isActive ? 'Active' : 'Inactive' }}</mat-chip>
-        </mat-chip-set>
-      </mat-cell>
-    </ng-container>
+      <ng-container matColumnDef="status">
+        <mat-header-cell *matHeaderCellDef> Status </mat-header-cell>
+        <mat-cell *matCellDef="let row">
+          <mat-chip-set>
+            <mat-chip [color]="row.isActive ? 'primary' : 'warn'" selected>{{ row.isActive ? 'Active' : 'Inactive' }}</mat-chip>
+          </mat-chip-set>
+        </mat-cell>
+      </ng-container>
 
-    <ng-container matColumnDef="actions">
-      <mat-header-cell *matHeaderCellDef class="actions"> </mat-header-cell>
-      <mat-cell *matCellDef="let row" class="actions">
-        <button mat-icon-button matTooltip="Locations" aria-label="Open warehouse locations" (click)="goLocations(row)" [disabled]="loading()">
-          <mat-icon>place</mat-icon>
-        </button>
-        <button mat-icon-button matTooltip="Edit" aria-label="Edit warehouse" (click)="openEdit(row)" [disabled]="loading()">
-          <mat-icon>edit</mat-icon>
-        </button>
-        <button mat-icon-button matTooltip="Toggle active" aria-label="Toggle warehouse active status" (click)="toggleActive(row)" [disabled]="loading()">
-          <mat-icon>{{ row.isActive ? 'pause_circle' : 'play_circle' }}</mat-icon>
-        </button>
-      </mat-cell>
-    </ng-container>
+      <ng-container matColumnDef="actions">
+        <mat-header-cell *matHeaderCellDef class="actions"> </mat-header-cell>
+        <mat-cell *matCellDef="let row" class="actions">
+          <button mat-icon-button matTooltip="Locations" aria-label="Open warehouse locations" (click)="goLocations(row)" [disabled]="loading()">
+            <mat-icon>place</mat-icon>
+          </button>
+          <button mat-icon-button matTooltip="Edit" aria-label="Edit warehouse" (click)="openEdit(row)" [disabled]="loading()">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button matTooltip="Toggle active" aria-label="Toggle warehouse active status" (click)="toggleActive(row)" [disabled]="loading()">
+            <mat-icon>{{ row.isActive ? 'pause_circle' : 'play_circle' }}</mat-icon>
+          </button>
+        </mat-cell>
+      </ng-container>
 
-    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-    <mat-row *matRowDef="let row; columns: displayedColumns; trackBy: trackWarehouse"></mat-row>
-    <mat-row *matNoDataRow>
-      <td class="empty" [attr.colspan]="displayedColumns.length">
-        {{ loading() ? 'Loading...' : 'No warehouses found' }}
-      </td>
-    </mat-row>
-  </mat-table>
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns; trackBy: trackWarehouse"></mat-row>
+    </table>
 
-  <mat-paginator
-    [length]="totalCount()"
-    [pageIndex]="page() - 1"
-    [pageSize]="pageSize()"
-    [pageSizeOptions]="[5,10,20,50]"
-    (page)="onPage($event)">
-  </mat-paginator>
+    @if (!loading() && rows().length === 0) {
+    <app-empty-state
+      icon="warehouse"
+      title="No warehouses"
+      description="Create a warehouse to start receiving and moving stock."
+      actionLabel="Add warehouse"
+      [action]="openCreate.bind(this)">
+    </app-empty-state>
+    }
+
+    <mat-paginator
+      [length]="totalCount()"
+      [pageIndex]="page() - 1"
+      [pageSize]="pageSize()"
+      [pageSizeOptions]="[5,10,20,50]"
+      (page)="onPage($event)">
+    </mat-paginator>
+
+    @if (loading()) {
+    <div class="loading">
+      <app-loading message="Loading warehouses..." />
+    </div>
+    }
+  </div>
 
   @if (error()) {
   <div class="error">{{ error() }}</div>

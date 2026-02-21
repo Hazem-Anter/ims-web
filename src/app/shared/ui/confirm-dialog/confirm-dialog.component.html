@@ -1,0 +1,16 @@
+<div class="dialog">
+  <div class="header">
+    <mat-icon>{{ data.icon || 'help' }}</mat-icon>
+    <div>
+      <h3>{{ data.title || 'Please confirm' }}</h3>
+      <p>{{ data.message }}</p>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button mat-button (click)="cancel()">{{ data.cancelText || 'Cancel' }}</button>
+    <button mat-flat-button color="primary" (click)="confirm()">
+      {{ data.confirmText || 'Confirm' }}
+    </button>
+  </div>
+</div>

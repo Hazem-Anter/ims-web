@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { environment } from '../../../environments/environment';
 import { PagedResult } from '../../shared/utils/paging';
+import { HttpParams } from '@angular/common/http';
+import { ApiService } from '../../core/http/api.service';
+import { API_ENDPOINTS } from '../../core/config/api.config';
 
 export interface ProductDetailsDto {
   id: number;
@@ -49,9 +50,7 @@ export interface StockMovementDto {
 
 @Injectable({ providedIn: 'root' })
 export class ProductsService {
-  private base = environment.apiBaseUrl;
-
-  constructor(private http: HttpClient) {}
+  constructor(private api: ApiService) {}
 
   list(search?: string, isActive?: boolean | null, page = 1, pageSize = 10) {
     let params = new HttpParams()
@@ -61,31 +60,31 @@ export class ProductsService {
     if (search?.trim()) params = params.set('search', search.trim());
     if (isActive !== null && isActive !== undefined) params = params.set('isActive', isActive);
 
-    return this.http.get<PagedResult<ProductDetailsDto>>(`${this.base}/api/products`, { params });
+    return this.api.get<PagedResult<ProductDetailsDto>>(API_ENDPOINTS.products, { params });
   }
 
   getById(id: number) {
-    return this.http.get<ProductDetailsDto>(`${this.base}/api/products/${id}`);
+    return this.api.get<ProductDetailsDto>(`${API_ENDPOINTS.products}/${id}`);
   }
 
   getByBarcode(barcode: string) {
-    return this.http.get<ProductDetailsDto>(`${this.base}/api/products/by-barcode/${encodeURIComponent(barcode.trim())}`);
+    return this.api.get<ProductDetailsDto>(`${API_ENDPOINTS.products}/by-barcode/${encodeURIComponent(barcode.trim())}`);
   }
 
   create(req: CreateProductRequest) {
-    return this.http.post<CreateProductResponse>(`${this.base}/api/products`, req);
+    return this.api.post<CreateProductResponse>(API_ENDPOINTS.products, req);
   }
 
   update(id: number, req: UpdateProductRequest) {
-    return this.http.put<{ productId: number }>(`${this.base}/api/products/${id}`, req);
+    return this.api.put<{ productId: number }>(`${API_ENDPOINTS.products}/${id}`, req);
   }
 
   activate(id: number) {
-    return this.http.patch<void>(`${this.base}/api/products/${id}/activate`, {});
+    return this.api.patch<void>(`${API_ENDPOINTS.products}/${id}/activate`, {});
   }
 
   deactivate(id: number) {
-    return this.http.patch<void>(`${this.base}/api/products/${id}/deactivate`, {});
+    return this.api.patch<void>(`${API_ENDPOINTS.products}/${id}/deactivate`, {});
   }
 
   timeline(productId: number, fromUtc?: string, toUtc?: string, warehouseId?: number | null, page = 1, pageSize = 50) {
@@ -95,8 +94,8 @@ export class ProductsService {
     if (toUtc) params = params.set('toUtc', toUtc);
     if (warehouseId) params = params.set('warehouseId', warehouseId);
 
-    return this.http.get<PagedResult<StockMovementDto>>(
-      `${this.base}/api/products/${productId}/timeline`,
+    return this.api.get<PagedResult<StockMovementDto>>(
+      `${API_ENDPOINTS.products}/${productId}/timeline`,
       { params }
     );
   }

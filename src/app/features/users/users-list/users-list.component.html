@@ -21,50 +21,63 @@
     </div>
   </form>
 
-  <mat-table [dataSource]="rows()" class="mat-elevation-z0">
-    <ng-container matColumnDef="email">
-      <mat-header-cell *matHeaderCellDef>Email</mat-header-cell>
-      <mat-cell *matCellDef="let row">
-        <div class="title">{{ row.email }}</div>
-        <div class="sub">ID #{{ row.id }}</div>
-      </mat-cell>
-    </ng-container>
+  <div class="table-card">
+    <mat-table [dataSource]="rows()" class="mat-elevation-z0" *ngIf="rows().length">
+      <ng-container matColumnDef="email">
+        <mat-header-cell *matHeaderCellDef>Email</mat-header-cell>
+        <mat-cell *matCellDef="let row">
+          <div class="title">{{ row.email }}</div>
+          <div class="sub">ID #{{ row.id }}</div>
+        </mat-cell>
+      </ng-container>
 
-    <ng-container matColumnDef="userName">
-      <mat-header-cell *matHeaderCellDef>Username</mat-header-cell>
-      <mat-cell *matCellDef="let row">{{ row.userName }}</mat-cell>
-    </ng-container>
+      <ng-container matColumnDef="userName">
+        <mat-header-cell *matHeaderCellDef>Username</mat-header-cell>
+        <mat-cell *matCellDef="let row">{{ row.userName }}</mat-cell>
+      </ng-container>
 
-    <ng-container matColumnDef="status">
-      <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
-      <mat-cell *matCellDef="let row">
-        @if (getStatus(row) === 'active') {
-        <mat-chip color="primary" selected>Active</mat-chip>
-        }
-        @if (getStatus(row) === 'locked') {
-        <mat-chip color="warn" selected>Deactivated</mat-chip>
-        }
-      </mat-cell>
-    </ng-container>
+      <ng-container matColumnDef="status">
+        <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
+        <mat-cell *matCellDef="let row">
+          @if (getStatus(row) === 'active') {
+          <mat-chip color="primary" selected>Active</mat-chip>
+          }
+          @if (getStatus(row) === 'locked') {
+          <mat-chip color="warn" selected>Deactivated</mat-chip>
+          }
+        </mat-cell>
+      </ng-container>
 
-    <ng-container matColumnDef="actions">
-      <mat-header-cell *matHeaderCellDef class="actions"></mat-header-cell>
-      <mat-cell *matCellDef="let row" class="actions">
-        <button mat-stroked-button color="primary" (click)="openManage(row)">
-          <mat-icon>manage_accounts</mat-icon>
-          Manage
-        </button>
-      </mat-cell>
-    </ng-container>
+      <ng-container matColumnDef="actions">
+        <mat-header-cell *matHeaderCellDef class="actions"></mat-header-cell>
+        <mat-cell *matCellDef="let row" class="actions">
+          <button mat-stroked-button color="primary" (click)="openManage(row)">
+            <mat-icon>manage_accounts</mat-icon>
+            Manage
+          </button>
+        </mat-cell>
+      </ng-container>
 
-    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-    <mat-row *matRowDef="let row; columns: displayedColumns; trackBy: trackUser"></mat-row>
-    <mat-row *matNoDataRow>
-      <td [attr.colspan]="displayedColumns.length" class="empty">
-        {{ loading() ? 'Loading...' : 'No users found' }}
-      </td>
-    </mat-row>
-  </mat-table>
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns; trackBy: trackUser"></mat-row>
+    </mat-table>
+
+    @if (!loading() && rows().length === 0) {
+    <app-empty-state
+      icon="people"
+      title="No users"
+      description="Create the first user to start assigning roles."
+      actionLabel="Add user"
+      [action]="openCreate.bind(this)">
+    </app-empty-state>
+    }
+
+    @if (loading()) {
+    <div class="loading">
+      <app-loading message="Loading users..." />
+    </div>
+    }
+  </div>
 
   <mat-paginator
     [length]="totalCount()"

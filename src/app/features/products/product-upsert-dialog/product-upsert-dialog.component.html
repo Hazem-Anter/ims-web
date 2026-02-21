@@ -10,34 +10,18 @@
     <mat-form-field appearance="outline">
       <mat-label>Name</mat-label>
 
-      <input matInput formControlName="name" />
-
-      <mat-error *ngIf="form.get('name')?.hasError('required')">
-        Name is required
-      </mat-error>
-
-      <mat-error *ngIf="form.get('name')?.hasError('minlength')">
-        Minimum 2 characters
-      </mat-error>
-
+      <input matInput formControlName="name" required />
     </mat-form-field>
+    <app-form-errors [control]="form.get('name')" label="Name" />
 
 
     <!-- SKU -->
     <mat-form-field appearance="outline">
       <mat-label>SKU</mat-label>
 
-      <input matInput formControlName="sku" />
-
-      <mat-error *ngIf="form.get('sku')?.hasError('required')">
-        SKU is required
-      </mat-error>
-
-      <mat-error *ngIf="form.get('sku')?.hasError('minlength')">
-        Minimum 2 characters
-      </mat-error>
-
+      <input matInput formControlName="sku" required />
     </mat-form-field>
+    <app-form-errors [control]="form.get('sku')" label="SKU" />
 
 
     <!-- Barcode -->
@@ -59,18 +43,20 @@
         min="0"
         formControlName="minStockLevel"
       />
-
-      <mat-error *ngIf="form.get('minStockLevel')?.hasError('required')">
-        Required
-      </mat-error>
-
     </mat-form-field>
+    <app-form-errors [control]="form.get('minStockLevel')" label="Min stock level" />
 
 
     <!-- Error message -->
     <div class="error" *ngIf="error()">
       {{ error() }}
     </div>
+
+    @if (loading() && isEdit) {
+    <div class="loading-row">
+      <app-loading message="Loading product..." />
+    </div>
+    }
 
   </form>
 

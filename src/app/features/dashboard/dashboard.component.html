@@ -10,12 +10,12 @@
   @if (loading()) {
   <div class="state">
     <mat-spinner diameter="36"></mat-spinner>
-    <span>Loading metrics…</span>
+    <span>Loading metrics...</span>
   </div>
   }
 
   @if (!loading() && error()) {
-  <div class="state error">
+  <div class="state error" role="alert" aria-live="assertive">
     <mat-icon color="warn">error</mat-icon>
     <span>{{ error() }}</span>
     <button mat-button color="primary" (click)="load(true)">Retry</button>
@@ -68,6 +68,58 @@
         <div class="hint">FIFO / Weighted average as per report</div>
       </div>
     </mat-card>
+  </div>
+
+  <div class="recent">
+    <div class="recent-head">
+      <div>
+        <h3>Recent Movements</h3>
+        <p class="muted">Latest 10 stock transactions across all warehouses.</p>
+      </div>
+      <button mat-stroked-button color="primary" (click)="loadRecent()">Refresh list</button>
+    </div>
+
+    @if (recentLoading()) {
+    <div class="recent-loading">
+      <app-loading message="Fetching recent movements..." />
+    </div>
+    }
+
+    @if (!recentLoading() && recentError()) {
+    <div class="state error" role="alert" aria-live="assertive">
+      <mat-icon color="warn">error</mat-icon>
+      <span>{{ recentError() }}</span>
+      <button mat-button (click)="loadRecent()">Retry</button>
+    </div>
+    }
+
+    @if (!recentLoading() && !recentError() && recentMovements().length === 0) {
+    <app-empty-state
+      icon="timeline"
+      title="No movements yet"
+      description="Stock transactions will appear here as soon as you receive or issue items.">
+    </app-empty-state>
+    }
+
+    @if (!recentLoading() && recentMovements().length) {
+    <div class="timeline">
+      @for (m of recentMovements(); track m.transactionId) {
+      <div class="row">
+        <div class="left">
+          <div class="title">{{ m.productName }} ({{ m.sku }})</div>
+          <div class="sub">{{ m.warehouseCode }} • {{ m.locationCode || '-' }}</div>
+        </div>
+        <div class="meta">
+          <span class="pill" [class.in]="m.quantityDelta > 0" [class.out]="m.quantityDelta < 0">
+            {{ m.type }}
+          </span>
+          <div class="qty">{{ m.quantityDelta }}</div>
+          <div class="date">{{ m.createAt | date:'MMM d, HH:mm' }}</div>
+        </div>
+      </div>
+      }
+    </div>
+    }
   </div>
   }
 </div>

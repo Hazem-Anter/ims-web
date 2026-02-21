@@ -35,44 +35,57 @@
     </div>
   </form>
 
-  <mat-table [dataSource]="rows()" class="mat-elevation-z0">
-    <ng-container matColumnDef="code">
-      <mat-header-cell *matHeaderCellDef>Code</mat-header-cell>
-      <mat-cell *matCellDef="let row">
-        <div class="title">{{ row.code }}</div>
-        <div class="sub">ID #{{ row.id }}</div>
-      </mat-cell>
-    </ng-container>
+  <div class="table-card">
+    <mat-table [dataSource]="rows()" class="mat-elevation-z0" *ngIf="rows().length">
+      <ng-container matColumnDef="code">
+        <mat-header-cell *matHeaderCellDef>Code</mat-header-cell>
+        <mat-cell *matCellDef="let row">
+          <div class="title">{{ row.code }}</div>
+          <div class="sub">ID #{{ row.id }}</div>
+        </mat-cell>
+      </ng-container>
 
-    <ng-container matColumnDef="status">
-      <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
-      <mat-cell *matCellDef="let row">
-        <mat-chip-set>
-          <mat-chip [color]="row.isActive ? 'primary' : 'warn'" selected>{{ row.isActive ? 'Active' : 'Inactive' }}</mat-chip>
-        </mat-chip-set>
-      </mat-cell>
-    </ng-container>
+      <ng-container matColumnDef="status">
+        <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
+        <mat-cell *matCellDef="let row">
+          <mat-chip-set>
+            <mat-chip [color]="row.isActive ? 'primary' : 'warn'" selected>{{ row.isActive ? 'Active' : 'Inactive' }}</mat-chip>
+          </mat-chip-set>
+        </mat-cell>
+      </ng-container>
 
-    <ng-container matColumnDef="actions">
-      <mat-header-cell *matHeaderCellDef class="actions"></mat-header-cell>
-      <mat-cell *matCellDef="let row" class="actions">
-        <button mat-icon-button matTooltip="Edit" aria-label="Edit location" (click)="openEdit(row)" [disabled]="loading()">
-          <mat-icon>edit</mat-icon>
-        </button>
-        <button mat-icon-button matTooltip="Toggle active" aria-label="Toggle location active status" (click)="toggleActive(row)" [disabled]="loading()">
-          <mat-icon>{{ row.isActive ? 'pause_circle' : 'play_circle' }}</mat-icon>
-        </button>
-      </mat-cell>
-    </ng-container>
+      <ng-container matColumnDef="actions">
+        <mat-header-cell *matHeaderCellDef class="actions"></mat-header-cell>
+        <mat-cell *matCellDef="let row" class="actions">
+          <button mat-icon-button matTooltip="Edit" aria-label="Edit location" (click)="openEdit(row)" [disabled]="loading()">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button matTooltip="Toggle active" aria-label="Toggle location active status" (click)="toggleActive(row)" [disabled]="loading()">
+            <mat-icon>{{ row.isActive ? 'pause_circle' : 'play_circle' }}</mat-icon>
+          </button>
+        </mat-cell>
+      </ng-container>
 
-    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-    <mat-row *matRowDef="let row; columns: displayedColumns; trackBy: trackLocation"></mat-row>
-    <mat-row *matNoDataRow>
-      <td [attr.colspan]="displayedColumns.length" class="empty">
-        {{ loading() ? 'Loading...' : 'No locations found' }}
-      </td>
-    </mat-row>
-  </mat-table>
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns; trackBy: trackLocation"></mat-row>
+    </mat-table>
+
+    @if (!loading() && rows().length === 0) {
+    <app-empty-state
+      icon="map"
+      title="No locations"
+      description="Add storage locations so inventory can be placed precisely."
+      actionLabel="Add location"
+      [action]="openCreate.bind(this)">
+    </app-empty-state>
+    }
+
+    @if (loading()) {
+    <div class="loading">
+      <app-loading message="Loading locations..." />
+    </div>
+    }
+  </div>
 
   @if (error()) {
   <div class="error">{{ error() }}</div>

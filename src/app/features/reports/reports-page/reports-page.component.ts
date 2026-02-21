@@ -15,6 +15,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { ReportsService, StockMovementDto, LowStockItemDto, DeadStockItemDto, StockValuationItemDto, StockValuationMode } from '../reports.service';
 import { LookupsService, ProductLookupDto, WarehouseLookupDto } from '../../lookups/lookups.service';
 import { PagedResult } from '../../../shared/utils/paging';
+import { ErrorMapper } from '../../../shared/utils/error-mapper.service';
+import { LoadingComponent } from '../../../shared/ui/loading/loading.component';
+import { EmptyStateComponent } from '../../../shared/ui/empty-state/empty-state.component';
 
 @Component({
   selector: 'app-reports-page',
@@ -30,7 +33,9 @@ import { PagedResult } from '../../../shared/utils/paging';
     MatSelectModule,
     MatButtonModule,
     MatChipsModule,
-    MatIconModule
+    MatIconModule,
+    LoadingComponent,
+    EmptyStateComponent
   ],
   templateUrl: './reports-page.component.html',
   styleUrl: './reports-page.component.scss',
@@ -40,6 +45,7 @@ export class ReportsPageComponent {
   private readonly fb = inject(FormBuilder);
   private readonly reports = inject(ReportsService);
   private readonly lookups = inject(LookupsService);
+  private readonly errors = inject(ErrorMapper);
 
   readonly warehouses = signal<WarehouseLookupDto[]>([]);
   readonly products = signal<ProductLookupDto[]>([]);
@@ -162,7 +168,7 @@ export class ReportsPageComponent {
         this.mvLoading.set(false);
       },
       error: (e) => {
-        this.mvError.set(e?.message ?? 'Failed to load movements.');
+        this.mvError.set(this.errors.toMessage(e, 'Failed to load movements.'));
         this.mvLoading.set(false);
       }
     });
@@ -200,7 +206,7 @@ export class ReportsPageComponent {
         this.lowLoading.set(false);
       },
       error: (e) => {
-        this.lowError.set(e?.message ?? 'Failed to load low stock.');
+        this.lowError.set(this.errors.toMessage(e, 'Failed to load low stock.'));
         this.lowLoading.set(false);
       }
     });
@@ -223,7 +229,7 @@ export class ReportsPageComponent {
         this.deadLoading.set(false);
       },
       error: (e) => {
-        this.deadError.set(e?.message ?? 'Failed to load dead stock.');
+        this.deadError.set(this.errors.toMessage(e, 'Failed to load dead stock.'));
         this.deadLoading.set(false);
       }
     });
@@ -246,7 +252,7 @@ export class ReportsPageComponent {
         this.valLoading.set(false);
       },
       error: (e) => {
-        this.valError.set(e?.message ?? 'Failed to load valuation.');
+        this.valError.set(this.errors.toMessage(e, 'Failed to load valuation.'));
         this.valLoading.set(false);
       }
     });

@@ -4,16 +4,22 @@
   <mat-form-field appearance="outline">
     <mat-label>Name</mat-label>
     <input matInput formControlName="name" />
-    <mat-error *ngIf="form.get('name')?.hasError('required')">Required</mat-error>
   </mat-form-field>
+  <app-form-errors [control]="form.get('name')" label="Name" />
 
   <mat-form-field appearance="outline">
     <mat-label>Code</mat-label>
     <input matInput formControlName="code" />
-    <mat-error *ngIf="form.get('code')?.hasError('required')">Required</mat-error>
   </mat-form-field>
+  <app-form-errors [control]="form.get('code')" label="Code" />
 
   <div class="error" *ngIf="error()">{{ error() }}</div>
+
+  @if (loading() && isEdit) {
+  <div class="loading-row">
+    <app-loading message="Loading warehouse..." />
+  </div>
+  }
 </div>
 
 <div mat-dialog-actions align="end">

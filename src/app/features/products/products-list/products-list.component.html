@@ -54,7 +54,7 @@
   }
 
   <div class="table-card">
-    <table mat-table [dataSource]="rows()" class="mat-elevation-z0">
+    <table mat-table [dataSource]="rows()" class="mat-elevation-z0" *ngIf="rows().length">
 
       <ng-container matColumnDef="id">
         <th mat-header-cell *matHeaderCellDef>ID</th>
@@ -112,6 +112,15 @@
 
     </table>
 
+    @if (!loading() && rows().length === 0) {
+    <app-empty-state
+      title="No products yet"
+      description="Create your first product to start tracking stock."
+      actionLabel="Add product"
+      [action]="openCreate.bind(this)">
+    </app-empty-state>
+    }
+
     <mat-paginator
       [length]="totalCount()"
       [pageSize]="pageSize()"
@@ -121,7 +130,9 @@
     </mat-paginator>
 
     @if (loading()) {
-    <div class="loading">Loading...</div>
+    <div class="loading">
+      <app-loading message="Loading products..." />
+    </div>
     }
   </div>
 </div>

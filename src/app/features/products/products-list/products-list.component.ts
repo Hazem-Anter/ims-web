@@ -14,6 +14,13 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 
 import { ProductsService, ProductDetailsDto } from '../products.service';
 import { ProductUpsertDialogComponent } from '../product-upsert-dialog/product-upsert-dialog.component';
+import { NotificationService } from '../../../shared/ui/notifications/notification.service';
+import { ConfirmDialogComponent } from '../../../shared/ui/confirm-dialog/confirm-dialog.component';
+import { LoadingComponent } from '../../../shared/ui/loading/loading.component';
+import { EmptyStateComponent } from '../../../shared/ui/empty-state/empty-state.component';
+import { ErrorMapper } from '../../../shared/utils/error-mapper.service';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { debounceTime, distinctUntilChanged } from 'rxjs';
 
 @Component({
   selector: 'app-products-list',
@@ -29,6 +36,8 @@ import { ProductUpsertDialogComponent } from '../product-upsert-dialog/product-u
     MatInputModule,
     MatSelectModule,
     MatDialogModule,
+    LoadingComponent,
+    EmptyStateComponent
   ],
   templateUrl: './products-list.component.html',
   styleUrl: './products-list.component.scss',
@@ -39,6 +48,8 @@ export class ProductsListComponent {
   private readonly products = inject(ProductsService);
   private readonly dialog = inject(MatDialog);
   private readonly router = inject(Router);
+  private readonly notifications = inject(NotificationService);
+  private readonly errors = inject(ErrorMapper);
   private activeLoadId = 0;
 
   readonly loading = signal(false);
@@ -64,6 +75,13 @@ export class ProductsListComponent {
       barcode: ['']
     });
 
+    this.filterForm.get('search')?.valueChanges
+      .pipe(debounceTime(350), distinctUntilChanged(), takeUntilDestroyed())
+      .subscribe(() => {
+        this.page.set(1);
+        this.load();
+      });
+
     this.load();
   }
 
@@ -86,7 +104,7 @@ export class ProductsListComponent {
       error: (e) => {
         if (requestId !== this.activeLoadId) return;
         this.loading.set(false);
-        this.error.set(e?.message ?? 'Failed to load products.');
+        this.error.set(this.errors.toMessage(e, 'Failed to load products.'));
       }
     });
   }
@@ -133,19 +151,36 @@ export class ProductsListComponent {
   toggleActive(row: ProductDetailsDto) {
     this.loading.set(true);
 
-    const req = row.isActive
-      ? this.products.deactivate(row.id)
-      : this.products.activate(row.id);
-
-    req.subscribe({
-      next: () => {
-        this.loading.set(false);
-        this.load();
-      },
-      error: (e) => {
-        this.loading.set(false);
-        this.error.set(e?.message ?? 'Operation failed.');
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      width: '360px',
+      data: {
+        title: row.isActive ? 'Deactivate product?' : 'Activate product?',
+        message: `Are you sure you want to ${row.isActive ? 'deactivate' : 'activate'} ${row.name}?`,
+        confirmText: row.isActive ? 'Deactivate' : 'Activate'
       }
+    });
+
+    ref.afterClosed().subscribe((confirm) => {
+      if (!confirm) {
+        this.loading.set(false);
+        return;
+      }
+
+      const req = row.isActive
+        ? this.products.deactivate(row.id)
+        : this.products.activate(row.id);
+
+      req.subscribe({
+        next: () => {
+          this.loading.set(false);
+          this.notifications.success(row.isActive ? 'Product deactivated.' : 'Product activated.');
+          this.load();
+        },
+        error: (e) => {
+          this.loading.set(false);
+          this.error.set(this.errors.toMessage(e, 'Operation failed.'));
+        }
+      });
     });
   }
 
@@ -167,7 +202,7 @@ export class ProductsListComponent {
       },
       error: (e) => {
         this.loading.set(false);
-        this.error.set(e?.message ?? 'Barcode not found.');
+        this.error.set(this.errors.toMessage(e, 'Barcode not found.'));
       }
     });
   }

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../environments/environment';
 import { Observable, shareReplay, throwError, timeout, catchError } from 'rxjs';
+import { ApiService } from '../../core/http/api.service';
+import { API_ENDPOINTS } from '../../core/config/api.config';
 
 export interface DashboardSummaryDto {
   totalProducts: number;
@@ -15,14 +15,13 @@ export interface DashboardSummaryDto {
 
 @Injectable({ providedIn: 'root' })
 export class DashboardService {
-  private base = environment.apiBaseUrl;
   private summaryRequest$?: Observable<DashboardSummaryDto>;
 
-  constructor(private http: HttpClient) {}
+  constructor(private api: ApiService) {}
 
   getSummary(forceRefresh = false) {
     if (forceRefresh || !this.summaryRequest$) {
-      this.summaryRequest$ = this.http.get<DashboardSummaryDto>(`${this.base}/api/dashboard/summary`).pipe(
+      this.summaryRequest$ = this.api.get<DashboardSummaryDto>(API_ENDPOINTS.dashboard.summary).pipe(
         timeout(10000),
         catchError((error) => {
           this.summaryRequest$ = undefined;

@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
@@ -14,6 +14,9 @@ import { MatIconModule } from '@angular/material/icon';
 
 import { InventoryService, StockOverviewItemDto } from '../inventory.service';
 import { LookupsService, ProductLookupDto, WarehouseLookupDto } from '../../lookups/lookups.service';
+import { LoadingComponent } from '../../../shared/ui/loading/loading.component';
+import { EmptyStateComponent } from '../../../shared/ui/empty-state/empty-state.component';
+import { ErrorMapper } from '../../../shared/utils/error-mapper.service';
 
 @Component({
   selector: 'app-stock-overview',
@@ -29,7 +32,9 @@ import { LookupsService, ProductLookupDto, WarehouseLookupDto } from '../../look
     MatInputModule,
     MatCheckboxModule,
     MatChipsModule,
-    MatIconModule
+    MatIconModule,
+    LoadingComponent,
+    EmptyStateComponent
   ],
   templateUrl: './stock-overview.component.html',
   styleUrl: './stock-overview.component.scss',
@@ -39,6 +44,8 @@ export class StockOverviewComponent {
   private readonly fb = inject(FormBuilder);
   private readonly inventory = inject(InventoryService);
   private readonly lookups = inject(LookupsService);
+  private readonly errors = inject(ErrorMapper);
+  private readonly router = inject(Router);
 
   readonly loading = signal(false);
   readonly error = signal('');
@@ -73,7 +80,7 @@ export class StockOverviewComponent {
     const { warehouseId, productId, lowStockOnly } = this.filterForm.getRawValue();
     this.inventory.stockOverview(warehouseId, productId, lowStockOnly).subscribe({
       next: (rows) => { this.rows.set(rows); this.loading.set(false); },
-      error: (e) => { this.error.set(e?.message ?? 'Failed to load overview.'); this.loading.set(false); }
+      error: (e) => { this.error.set(this.errors.toMessage(e, 'Failed to load overview.')); this.loading.set(false); }
     });
   }
 
@@ -94,4 +101,6 @@ export class StockOverviewComponent {
   trackOverview(_: number, row: StockOverviewItemDto) {
     return `${row.productId}-${row.warehouseId}-${row.locationId ?? 'x'}`;
   }
+
+  goToTransactions = () => this.router.navigate(['/inventory']);
 }

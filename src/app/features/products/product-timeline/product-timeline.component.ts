@@ -12,6 +12,9 @@ import { MatButtonModule } from '@angular/material/button';
 
 import { ProductsService, StockMovementDto } from '../products.service';
 import { LookupsService, WarehouseLookupDto } from '../../lookups/lookups.service';
+import { LoadingComponent } from '../../../shared/ui/loading/loading.component';
+import { EmptyStateComponent } from '../../../shared/ui/empty-state/empty-state.component';
+import { ErrorMapper } from '../../../shared/utils/error-mapper.service';
 
 @Component({
   selector: 'app-product-timeline',
@@ -24,6 +27,8 @@ import { LookupsService, WarehouseLookupDto } from '../../lookups/lookups.servic
     MatInputModule,
     MatSelectModule,
     MatButtonModule,
+    LoadingComponent,
+    EmptyStateComponent,
   ],
   templateUrl: './product-timeline.component.html',
   styleUrl: './product-timeline.component.scss',
@@ -34,9 +39,10 @@ export class ProductTimelineComponent {
   private readonly fb = inject(FormBuilder);
   private readonly products = inject(ProductsService);
   private readonly lookups = inject(LookupsService);
+  private readonly errors = inject(ErrorMapper);
   private activeLoadId = 0;
 
-  readonly productId = Number(this.route.snapshot.paramMap.get('id'));
+  readonly productId = signal<number | null>(null);
   readonly loading = signal(false);
   readonly error = signal('');
 
@@ -58,6 +64,16 @@ export class ProductTimelineComponent {
       warehouseId: [null],
     });
 
+    const rawId = this.route.snapshot.paramMap.get('id');
+    const parsedId = rawId ? Number(rawId) : NaN;
+
+    if (Number.isNaN(parsedId) || parsedId <= 0) {
+      this.error.set('Invalid product id.');
+      return;
+    }
+
+    this.productId.set(parsedId);
+
     this.loadWarehouses();
     this.load();
   }
@@ -70,6 +86,12 @@ export class ProductTimelineComponent {
   }
 
   load() {
+    const id = this.productId();
+    if (!id) {
+      this.error.set('Product id is missing.');
+      return;
+    }
+
     const requestId = ++this.activeLoadId;
     this.loading.set(true);
     this.error.set('');
@@ -79,7 +101,7 @@ export class ProductTimelineComponent {
     const fromUtc = v.fromUtc ? new Date(v.fromUtc).toISOString() : undefined;
     const toUtc = v.toUtc ? new Date(v.toUtc).toISOString() : undefined;
 
-    this.products.timeline(this.productId, fromUtc, toUtc, v.warehouseId, this.page(), this.pageSize()).subscribe({
+    this.products.timeline(id, fromUtc, toUtc, v.warehouseId, this.page(), this.pageSize()).subscribe({
       next: (res) => {
         if (requestId !== this.activeLoadId) return;
         this.rows.set(res.items);
@@ -91,7 +113,7 @@ export class ProductTimelineComponent {
       error: (e) => {
         if (requestId !== this.activeLoadId) return;
         this.loading.set(false);
-        this.error.set(e?.message ?? 'Failed to load timeline.');
+        this.error.set(this.errors.toMessage(e, 'Failed to load timeline.'));
       }
     });
   }

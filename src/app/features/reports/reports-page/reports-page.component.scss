@@ -24,6 +24,7 @@ h2 { margin: 0; font-size: 26px; }
 .sub { color: var(--mat-sys-outline); font-size: 12px; }
 .empty { text-align: center; padding: 14px; color: var(--mat-sys-outline); }
 .error { color: var(--mat-sys-error); }
+.loading { display: flex; justify-content: center; padding: 8px 0; }
 
 mat-paginator { align-self: flex-end; }
 

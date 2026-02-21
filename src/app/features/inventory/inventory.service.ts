@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { environment } from '../../../environments/environment';
+import { HttpParams } from '@angular/common/http';
+import { ApiService } from '../../core/http/api.service';
+import { API_ENDPOINTS } from '../../core/config/api.config';
 
 export interface StockOverviewItemDto {
   productId: number;
@@ -55,30 +56,28 @@ export interface AdjustStockRequest {
 
 @Injectable({ providedIn: 'root' })
 export class InventoryService {
-  private base = environment.apiBaseUrl;
-
-  constructor(private http: HttpClient) {}
+  constructor(private api: ApiService) {}
 
   stockOverview(warehouseId?: number | null, productId?: number | null, lowStockOnly = false) {
     let params = new HttpParams().set('lowStockOnly', lowStockOnly);
     if (warehouseId) params = params.set('warehouseId', warehouseId);
     if (productId) params = params.set('productId', productId);
-    return this.http.get<StockOverviewItemDto[]>(`${this.base}/api/inventory/stock-overview`, { params });
+    return this.api.get<StockOverviewItemDto[]>(API_ENDPOINTS.inventory.overview, { params });
   }
 
   receive(req: ReceiveStockRequest) {
-    return this.http.post<{ transactionId: number }>(`${this.base}/api/inventory/receive`, req);
+    return this.api.post<{ transactionId: number }>(API_ENDPOINTS.inventory.receive, req);
   }
 
   issue(req: IssueStockRequest) {
-    return this.http.post<{ transactionId: number }>(`${this.base}/api/inventory/issue`, req);
+    return this.api.post<{ transactionId: number }>(API_ENDPOINTS.inventory.issue, req);
   }
 
   transfer(req: TransferStockRequest) {
-    return this.http.post<{ transactionId: number }>(`${this.base}/api/inventory/transfer`, req);
+    return this.api.post<{ transactionId: number }>(API_ENDPOINTS.inventory.transfer, req);
   }
 
   adjust(req: AdjustStockRequest) {
-    return this.http.post<{ transactionId: number }>(`${this.base}/api/inventory/adjust`, req);
+    return this.api.post<{ transactionId: number }>(API_ENDPOINTS.inventory.adjust, req);
   }
 }

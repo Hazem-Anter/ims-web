@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { environment } from '../../../environments/environment';
+import { HttpParams } from '@angular/common/http';
 import { PagedResult } from '../../shared/utils/paging';
+import { ApiService } from '../../core/http/api.service';
+import { API_ENDPOINTS } from '../../core/config/api.config';
 
 export interface StockMovementDto {
   transactionId: number;
@@ -61,8 +62,7 @@ export type StockValuationMode = 'WeightedAverage' | 'Fifo';
 
 @Injectable({ providedIn: 'root' })
 export class ReportsService {
-  private base = environment.apiBaseUrl;
-  constructor(private http: HttpClient) {}
+  constructor(private api: ApiService) {}
 
   stockMovements(params: {
     fromUtc: string;
@@ -81,7 +81,7 @@ export class ReportsService {
     if (params.warehouseId) p = p.set('warehouseId', params.warehouseId);
     if (params.productId) p = p.set('productId', params.productId);
 
-    return this.http.get<PagedResult<StockMovementDto>>(`${this.base}/api/reports/stock-movements`, { params: p });
+    return this.api.get<PagedResult<StockMovementDto>>(API_ENDPOINTS.reports.stockMovements, { params: p });
   }
 
   lowStock(warehouseId?: number | null, productId?: number | null) {
@@ -89,19 +89,19 @@ export class ReportsService {
     if (warehouseId) params = params.set('warehouseId', warehouseId);
     if (productId) params = params.set('productId', productId);
 
-    return this.http.get<LowStockItemDto[]>(`${this.base}/api/reports/low-stock`, { params });
+    return this.api.get<LowStockItemDto[]>(API_ENDPOINTS.reports.lowStock, { params });
   }
 
   deadStock(days = 30, warehouseId?: number | null) {
     let params = new HttpParams().set('days', days);
     if (warehouseId) params = params.set('warehouseId', warehouseId);
-    return this.http.get<DeadStockItemDto[]>(`${this.base}/api/reports/dead-stock`, { params });
+    return this.api.get<DeadStockItemDto[]>(API_ENDPOINTS.reports.deadStock, { params });
   }
 
   stockValuation(mode: StockValuationMode = 'Fifo', warehouseId?: number | null, productId?: number | null) {
     let params = new HttpParams().set('mode', mode);
     if (warehouseId) params = params.set('warehouseId', warehouseId);
     if (productId) params = params.set('productId', productId);
-    return this.http.get<StockValuationItemDto[]>(`${this.base}/api/reports/stock-valuation`, { params });
+    return this.api.get<StockValuationItemDto[]>(API_ENDPOINTS.reports.stockValuation, { params });
   }
 }

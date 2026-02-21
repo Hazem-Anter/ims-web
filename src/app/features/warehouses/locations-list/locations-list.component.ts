@@ -15,6 +15,13 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { WarehousesService, LocationListItemDto } from '../warehouses.service';
 import { LocationUpsertDialogComponent } from '../location-upsert-dialog/location-upsert-dialog.component';
+import { NotificationService } from '../../../shared/ui/notifications/notification.service';
+import { ConfirmDialogComponent } from '../../../shared/ui/confirm-dialog/confirm-dialog.component';
+import { EmptyStateComponent } from '../../../shared/ui/empty-state/empty-state.component';
+import { LoadingComponent } from '../../../shared/ui/loading/loading.component';
+import { ErrorMapper } from '../../../shared/utils/error-mapper.service';
+import { debounceTime, distinctUntilChanged } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-locations-list',
@@ -30,7 +37,9 @@ import { LocationUpsertDialogComponent } from '../location-upsert-dialog/locatio
     MatSelectModule,
     MatChipsModule,
     MatDialogModule,
-    MatTooltipModule
+    MatTooltipModule,
+    EmptyStateComponent,
+    LoadingComponent
   ],
   templateUrl: './locations-list.component.html',
   styleUrl: './locations-list.component.scss',
@@ -42,6 +51,8 @@ export class LocationsListComponent {
   private readonly fb = inject(FormBuilder);
   private readonly warehouses = inject(WarehousesService);
   private readonly dialog = inject(MatDialog);
+  private readonly notifications = inject(NotificationService);
+  private readonly errors = inject(ErrorMapper);
   private activeLoadId = 0;
 
   readonly warehouseId = Number(this.route.snapshot.paramMap.get('id'));
@@ -61,6 +72,15 @@ export class LocationsListComponent {
       isActive: [null]
     });
 
+    this.filterForm.get('search')?.valueChanges
+      .pipe(debounceTime(350), distinctUntilChanged(), takeUntilDestroyed())
+      .subscribe(() => this.load());
+
+    if (Number.isNaN(this.warehouseId) || this.warehouseId <= 0) {
+      this.error.set('Invalid warehouse id.');
+      return;
+    }
+
     this.loadWarehouse();
     this.load();
   }
@@ -79,15 +99,15 @@ export class LocationsListComponent {
 
     const { search, isActive } = this.filterForm.getRawValue();
 
-    this.warehouses.listLocations(this.warehouseId, search, isActive).subscribe({
-      next: (rows) => {
+    this.warehouses.listLocations(this.warehouseId, search, isActive, 1, 200).subscribe({
+      next: (res) => {
         if (requestId !== this.activeLoadId) return;
-        this.rows.set(rows);
+        this.rows.set(res.items ?? []);
         this.loading.set(false);
       },
       error: (e) => {
         if (requestId !== this.activeLoadId) return;
-        this.error.set(e?.message ?? 'Failed to load locations.');
+        this.error.set(this.errors.toMessage(e, 'Failed to load locations.'));
         this.loading.set(false);
       }
     });
@@ -120,16 +140,36 @@ export class LocationsListComponent {
 
   toggleActive(row: LocationListItemDto) {
     this.loading.set(true);
-    const req = row.isActive
-      ? this.warehouses.deactivateLocation(this.warehouseId, row.id)
-      : this.warehouses.activateLocation(this.warehouseId, row.id);
-
-    req.subscribe({
-      next: () => { this.loading.set(false); this.load(); },
-      error: (e) => {
-        this.loading.set(false);
-        this.error.set(e?.message ?? 'Operation failed.');
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      width: '360px',
+      data: {
+        title: row.isActive ? 'Deactivate location?' : 'Activate location?',
+        message: `${row.code} will be ${row.isActive ? 'disabled' : 'enabled'} for transactions.`,
+        confirmText: row.isActive ? 'Deactivate' : 'Activate'
       }
+    });
+
+    ref.afterClosed().subscribe((confirm) => {
+      if (!confirm) {
+        this.loading.set(false);
+        return;
+      }
+
+      const req = row.isActive
+        ? this.warehouses.deactivateLocation(this.warehouseId, row.id)
+        : this.warehouses.activateLocation(this.warehouseId, row.id);
+
+      req.subscribe({
+        next: () => {
+          this.loading.set(false);
+          this.notifications.success(row.isActive ? 'Location deactivated.' : 'Location activated.');
+          this.load();
+        },
+        error: (e) => {
+          this.loading.set(false);
+          this.error.set(this.errors.toMessage(e, 'Operation failed.'));
+        }
+      });
     });
   }
 

@@ -18,11 +18,15 @@
 }
 .filter-actions { display: flex; gap: 8px; }
 
-.mat-table {
-  background: var(--mat-sys-surface);
+.table-card {
   border: 1px solid color-mix(in srgb, var(--mat-sys-primary) 20%, transparent);
   border-radius: 12px;
   overflow: hidden;
+  background: var(--mat-sys-surface);
+}
+
+.mat-table {
+  background: var(--mat-sys-surface);
 }
 
 .title { font-weight: 600; }
@@ -38,6 +42,12 @@
 
 .error {
   color: var(--mat-sys-error);
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 12px 0;
 }
 
 @media (max-width: 960px) {

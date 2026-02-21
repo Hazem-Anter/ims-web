@@ -11,15 +11,21 @@
   </div>
 
   @if (message()) {
-  <div class="flash">
+  <div class="flash" role="status" aria-live="polite">
     <mat-icon color="primary">check_circle</mat-icon>
     <span>{{ message() }}</span>
   </div>
   }
   @if (error()) {
-  <div class="flash error">
+  <div class="flash error" role="alert" aria-live="assertive">
     <mat-icon color="warn">error</mat-icon>
     <span>{{ error() }}</span>
+  </div>
+  }
+
+  @if (loading()) {
+  <div class="loading-banner">
+    <app-loading message="Processing transaction..." />
   </div>
   }
 
@@ -31,7 +37,7 @@
             <mat-label>Product</mat-label>
             <mat-select formControlName="productId" required>
               @for (p of products(); track trackProduct($index, p)) {
-              <mat-option [value]="p.id">{{ p.name }} — {{ p.sku }}</mat-option>
+              <mat-option [value]="p.id">{{ p.name }} - {{ p.sku }}</mat-option>
               }
             </mat-select>
           </mat-form-field>
@@ -91,7 +97,7 @@
             <mat-label>Product</mat-label>
             <mat-select formControlName="productId" required>
               @for (p of products(); track trackProduct($index, p)) {
-              <mat-option [value]="p.id">{{ p.name }} — {{ p.sku }}</mat-option>
+              <mat-option [value]="p.id">{{ p.name }} - {{ p.sku }}</mat-option>
               }
             </mat-select>
           </mat-form-field>
@@ -146,7 +152,7 @@
             <mat-label>Product</mat-label>
             <mat-select formControlName="productId" required>
               @for (p of products(); track trackProduct($index, p)) {
-              <mat-option [value]="p.id">{{ p.name }} — {{ p.sku }}</mat-option>
+              <mat-option [value]="p.id">{{ p.name }} - {{ p.sku }}</mat-option>
               }
             </mat-select>
           </mat-form-field>
@@ -220,7 +226,7 @@
             <mat-label>Product</mat-label>
             <mat-select formControlName="productId" required>
               @for (p of products(); track trackProduct($index, p)) {
-              <mat-option [value]="p.id">{{ p.name }} — {{ p.sku }}</mat-option>
+              <mat-option [value]="p.id">{{ p.name }} - {{ p.sku }}</mat-option>
               }
             </mat-select>
           </mat-form-field>

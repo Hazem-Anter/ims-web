@@ -8,6 +8,10 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 
 import { ProductsService } from '../products.service';
+import { FormErrorsComponent } from '../../../shared/ui/form-errors/form-errors.component';
+import { NotificationService } from '../../../shared/ui/notifications/notification.service';
+import { ErrorMapper } from '../../../shared/utils/error-mapper.service';
+import { LoadingComponent } from '../../../shared/ui/loading/loading.component';
 
 type DialogData =
   | { mode: 'create' }
@@ -24,6 +28,8 @@ type DialogData =
     MatButtonModule,
     MatFormFieldModule,
     MatInputModule,
+    FormErrorsComponent,
+    LoadingComponent
   ],
   templateUrl: './product-upsert-dialog.component.html',
   styleUrl: './product-upsert-dialog.component.scss',
@@ -43,7 +49,9 @@ export class ProductUpsertDialogComponent {
     private fb: FormBuilder,
     private products: ProductsService,
     private ref: MatDialogRef<ProductUpsertDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: DialogData
+    @Inject(MAT_DIALOG_DATA) public data: DialogData,
+    private notifications: NotificationService,
+    private errors: ErrorMapper
   ) {
     this.form = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
@@ -73,7 +81,7 @@ export class ProductUpsertDialogComponent {
       },
       error: (e) => {
         this.loading.set(false);
-        this.error.set(e?.message ?? 'Failed to load product.');
+        this.error.set(this.errors.toMessage(e, 'Failed to load product.'));
       }
     });
   }
@@ -99,11 +107,12 @@ export class ProductUpsertDialogComponent {
       this.products.update(this.data.productId, payload).subscribe({
         next: () => {
           this.loading.set(false);
+          this.notifications.success('Product updated.');
           this.ref.close(true);
         },
         error: (e) => {
           this.loading.set(false);
-          this.error.set(e?.message ?? 'Save failed.');
+          this.error.set(this.errors.toMessage(e, 'Save failed.'));
         }
       });
       return;
@@ -113,11 +122,12 @@ export class ProductUpsertDialogComponent {
     this.products.create(payload).subscribe({
       next: () => {
         this.loading.set(false);
+        this.notifications.success('Product created.');
         this.ref.close(true);
       },
       error: (e) => {
         this.loading.set(false);
-        this.error.set(e?.message ?? 'Save failed.');
+        this.error.set(this.errors.toMessage(e, 'Save failed.'));
       }
     });
   }

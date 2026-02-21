@@ -15,6 +15,11 @@ import { UsersService, UserListItemDto } from '../users.service';
 import { PagedResult } from '../../../shared/utils/paging';
 import { UserUpsertDialogComponent } from '../user-upsert-dialog/user-upsert-dialog.component';
 import { UserManageDialogComponent } from '../user-manage-dialog/user-manage-dialog.component';
+import { LoadingComponent } from '../../../shared/ui/loading/loading.component';
+import { EmptyStateComponent } from '../../../shared/ui/empty-state/empty-state.component';
+import { ErrorMapper } from '../../../shared/utils/error-mapper.service';
+import { debounceTime, distinctUntilChanged } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-users-list',
@@ -29,7 +34,9 @@ import { UserManageDialogComponent } from '../user-manage-dialog/user-manage-dia
     MatButtonModule,
     MatIconModule,
     MatChipsModule,
-    MatDialogModule
+    MatDialogModule,
+    LoadingComponent,
+    EmptyStateComponent
   ],
   templateUrl: './users-list.component.html',
   styleUrl: './users-list.component.scss',
@@ -39,6 +46,7 @@ export class UsersListComponent {
   private readonly fb = inject(FormBuilder);
   private readonly users = inject(UsersService);
   private readonly dialog = inject(MatDialog);
+  private readonly errors = inject(ErrorMapper);
   private activeLoadId = 0;
 
   readonly loading = signal(false);
@@ -55,6 +63,11 @@ export class UsersListComponent {
 
   constructor() {
     this.filterForm = this.fb.group({ search: [''] });
+
+    this.filterForm.get('search')?.valueChanges
+      .pipe(debounceTime(350), distinctUntilChanged(), takeUntilDestroyed())
+      .subscribe(() => { this.page.set(1); this.load(); });
+
     this.load();
   }
 
@@ -79,7 +92,7 @@ export class UsersListComponent {
       },
       error: (e) => {
         if (requestId !== this.activeLoadId) return;
-        this.error.set(e?.message ?? 'Failed to load users.');
+        this.error.set(this.errors.toMessage(e, 'Failed to load users.'));
         this.loading.set(false);
       }
     });

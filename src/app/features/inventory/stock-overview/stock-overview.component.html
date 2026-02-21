@@ -23,7 +23,7 @@
       <mat-label>Product</mat-label>
       <mat-select formControlName="productId">
         <mat-option [value]="null">All</mat-option>
-        <mat-option *ngFor="let p of products(); trackBy: trackProduct" [value]="p.id">{{ p.name }} — {{ p.sku }}</mat-option>
+        <mat-option *ngFor="let p of products(); trackBy: trackProduct" [value]="p.id">{{ p.name }} - {{ p.sku }}</mat-option>
       </mat-select>
     </mat-form-field>
 
@@ -35,42 +35,55 @@
     </div>
   </form>
 
-  <mat-table [dataSource]="rows()" class="mat-elevation-z0">
-    <ng-container matColumnDef="product">
-      <mat-header-cell *matHeaderCellDef>Product</mat-header-cell>
-      <mat-cell *matCellDef="let row">
-        <div class="title">{{ row.productName }}</div>
-        <div class="sub">{{ row.sku }}</div>
-      </mat-cell>
-    </ng-container>
+  <div class="table-card">
+    <mat-table [dataSource]="rows()" class="mat-elevation-z0" *ngIf="rows().length">
+      <ng-container matColumnDef="product">
+        <mat-header-cell *matHeaderCellDef>Product</mat-header-cell>
+        <mat-cell *matCellDef="let row">
+          <div class="title">{{ row.productName }}</div>
+          <div class="sub">{{ row.sku }}</div>
+        </mat-cell>
+      </ng-container>
 
-    <ng-container matColumnDef="warehouse">
-      <mat-header-cell *matHeaderCellDef>Warehouse</mat-header-cell>
-      <mat-cell *matCellDef="let row">{{ row.warehouseCode }}</mat-cell>
-    </ng-container>
+      <ng-container matColumnDef="warehouse">
+        <mat-header-cell *matHeaderCellDef>Warehouse</mat-header-cell>
+        <mat-cell *matCellDef="let row">{{ row.warehouseCode }}</mat-cell>
+      </ng-container>
 
-    <ng-container matColumnDef="location">
-      <mat-header-cell *matHeaderCellDef>Location</mat-header-cell>
-      <mat-cell *matCellDef="let row">{{ row.locationCode || '—' }}</mat-cell>
-    </ng-container>
+      <ng-container matColumnDef="location">
+        <mat-header-cell *matHeaderCellDef>Location</mat-header-cell>
+        <mat-cell *matCellDef="let row">{{ row.locationCode || '-' }}</mat-cell>
+      </ng-container>
 
-    <ng-container matColumnDef="qty">
-      <mat-header-cell *matHeaderCellDef>On hand</mat-header-cell>
-      <mat-cell *matCellDef="let row">
-        <mat-chip-set>
-          <mat-chip color="primary" selected>{{ row.quantityOnHand }}</mat-chip>
-        </mat-chip-set>
-      </mat-cell>
-    </ng-container>
+      <ng-container matColumnDef="qty">
+        <mat-header-cell *matHeaderCellDef>On hand</mat-header-cell>
+        <mat-cell *matCellDef="let row">
+          <mat-chip-set>
+            <mat-chip color="primary" selected>{{ row.quantityOnHand }}</mat-chip>
+          </mat-chip-set>
+        </mat-cell>
+      </ng-container>
 
-    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-    <mat-row *matRowDef="let row; columns: displayedColumns; trackBy: trackOverview"></mat-row>
-    <mat-row *matNoDataRow>
-      <td [attr.colspan]="displayedColumns.length" class="empty">
-        {{ loading() ? 'Loading...' : 'No data' }}
-      </td>
-    </mat-row>
-  </mat-table>
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns; trackBy: trackOverview"></mat-row>
+    </mat-table>
+
+    @if (!loading() && rows().length === 0) {
+    <app-empty-state
+      icon="inventory_2"
+      title="No stock yet"
+      description="Stock levels will appear here after you receive or adjust inventory."
+      actionLabel="Create transaction"
+      [action]="goToTransactions">
+    </app-empty-state>
+    }
+
+    @if (loading()) {
+    <div class="loading">
+      <app-loading message="Loading stock overview..." />
+    </div>
+    }
+  </div>
 
   <div class="error" *ngIf="error()">{{ error() }}</div>
 </div>

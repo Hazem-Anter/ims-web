@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { environment } from '../../../environments/environment';
+import { HttpParams } from '@angular/common/http';
 import { Observable, catchError, shareReplay, throwError } from 'rxjs';
+import { ApiService } from '../../core/http/api.service';
+import { API_ENDPOINTS } from '../../core/config/api.config';
 
 export interface LookupItem {
   id: number;
@@ -17,10 +18,9 @@ export type LocationLookupDto = LookupItem;
 
 @Injectable({ providedIn: 'root' })
 export class LookupsService {
-  private base = environment.apiBaseUrl;
   private readonly cache = new Map<string, Observable<LookupItem[]>>();
 
-  constructor(private http: HttpClient) {}
+  constructor(private api: ApiService) {}
 
   private getCached<T extends LookupItem>(key: string, factory: () => Observable<T[]>, forceRefresh = false) {
     if (forceRefresh) {
@@ -47,26 +47,38 @@ export class LookupsService {
   products(search?: string, isActive?: boolean | null, take = 200, forceRefresh = false) {
     let params = new HttpParams().set('take', take);
     if (search?.trim()) params = params.set('search', search.trim());
-    if (isActive !== null && isActive !== undefined) params = params.set('isActive', isActive);
+    if (isActive !== null && isActive !== undefined) params = params.set('activeOnly', isActive);
 
     const key = `products|${search?.trim() ?? ''}|${String(isActive)}|${take}`;
-    return this.getCached(key, () => this.http.get<ProductLookupDto[]>(`${this.base}/api/lookups/products`, { params }), forceRefresh);
+    return this.getCached(
+      key,
+      () => this.api.get<ProductLookupDto[]>(API_ENDPOINTS.lookups.products, { params }),
+      forceRefresh
+    );
   }
 
   warehouses(isActive?: boolean | null, take = 200, forceRefresh = false) {
     let params = new HttpParams().set('take', take);
-    if (isActive !== null && isActive !== undefined) params = params.set('isActive', isActive);
+    if (isActive !== null && isActive !== undefined) params = params.set('activeOnly', isActive);
 
     const key = `warehouses|${String(isActive)}|${take}`;
-    return this.getCached(key, () => this.http.get<WarehouseLookupDto[]>(`${this.base}/api/lookups/warehouses`, { params }), forceRefresh);
+    return this.getCached(
+      key,
+      () => this.api.get<WarehouseLookupDto[]>(API_ENDPOINTS.lookups.warehouses, { params }),
+      forceRefresh
+    );
   }
 
   locations(warehouseId: number, search?: string, isActive?: boolean | null, take = 200, forceRefresh = false) {
-    let params = new HttpParams().set('warehouseId', warehouseId).set('take', take);
+    let params = new HttpParams().set('take', take);
     if (search?.trim()) params = params.set('search', search.trim());
-    if (isActive !== null && isActive !== undefined) params = params.set('isActive', isActive);
+    if (isActive !== null && isActive !== undefined) params = params.set('activeOnly', isActive);
 
     const key = `locations|${warehouseId}|${search?.trim() ?? ''}|${String(isActive)}|${take}`;
-    return this.getCached(key, () => this.http.get<LocationLookupDto[]>(`${this.base}/api/lookups/locations`, { params }), forceRefresh);
+    return this.getCached(
+      key,
+      () => this.api.get<LocationLookupDto[]>(`${API_ENDPOINTS.lookups.warehouses}/${warehouseId}/locations`, { params }),
+      forceRefresh
+    );
   }
 }

@@ -14,6 +14,10 @@ import { MatIconModule } from '@angular/material/icon';
 
 import { InventoryService } from '../inventory.service';
 import { LookupsService, ProductLookupDto, WarehouseLookupDto, LocationLookupDto } from '../../lookups/lookups.service';
+import { NotificationService } from '../../../shared/ui/notifications/notification.service';
+import { ErrorMapper } from '../../../shared/utils/error-mapper.service';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { LoadingComponent } from '../../../shared/ui/loading/loading.component';
 
 @Component({
   selector: 'app-transactions',
@@ -29,7 +33,8 @@ import { LookupsService, ProductLookupDto, WarehouseLookupDto, LocationLookupDto
     MatButtonModule,
     MatCardModule,
     MatDividerModule,
-    MatIconModule
+    MatIconModule,
+    LoadingComponent
   ],
   templateUrl: './transactions.component.html',
   styleUrl: './transactions.component.scss',
@@ -39,6 +44,8 @@ export class TransactionsComponent {
   private readonly fb = inject(FormBuilder);
   private readonly inventory = inject(InventoryService);
   private readonly lookups = inject(LookupsService);
+  private readonly notifications = inject(NotificationService);
+  private readonly errors = inject(ErrorMapper);
 
   readonly products = signal<ProductLookupDto[]>([]);
   readonly warehouses = signal<WarehouseLookupDto[]>([]);
@@ -110,11 +117,25 @@ export class TransactionsComponent {
   }
 
   private setupLocationWatchers() {
-    this.receiveForm.get('warehouseId')?.valueChanges.subscribe((id) => this.loadLocationsFor(id, 'locations'));
-    this.issueForm.get('warehouseId')?.valueChanges.subscribe((id) => this.loadLocationsFor(id, 'locations'));
-    this.transferForm.get('fromWarehouseId')?.valueChanges.subscribe((id) => this.loadLocationsFor(id, 'from'));
-    this.transferForm.get('toWarehouseId')?.valueChanges.subscribe((id) => this.loadLocationsFor(id, 'to'));
-    this.adjustForm.get('warehouseId')?.valueChanges.subscribe((id) => this.loadLocationsFor(id, 'locations'));
+    this.receiveForm.get('warehouseId')?.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe((id) => this.loadLocationsFor(id, 'locations'));
+
+    this.issueForm.get('warehouseId')?.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe((id) => this.loadLocationsFor(id, 'locations'));
+
+    this.transferForm.get('fromWarehouseId')?.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe((id) => this.loadLocationsFor(id, 'from'));
+
+    this.transferForm.get('toWarehouseId')?.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe((id) => this.loadLocationsFor(id, 'to'));
+
+    this.adjustForm.get('warehouseId')?.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe((id) => this.loadLocationsFor(id, 'locations'));
   }
 
   private loadLocationsFor(warehouseId: number | null, target: 'from' | 'to' | 'locations') {
@@ -124,7 +145,7 @@ export class TransactionsComponent {
       else this.locations.set([]);
       return;
     }
-    this.lookups.locations(warehouseId, undefined, true, 100).subscribe({
+    this.lookups.locations(warehouseId, undefined, true, 100, true).subscribe({
       next: (locs) => {
         if (target === 'from') this.fromLocations.set(locs);
         else if (target === 'to') this.toLocations.set(locs);
@@ -137,17 +158,16 @@ export class TransactionsComponent {
     this.message.set(successMsg);
     this.error.set('');
     this.loading.set(false);
+    this.notifications.success(successMsg);
   }
 
   private handleError(e: unknown) {
-    const message =
-      typeof e === 'object' && e !== null && 'message' in e && typeof (e as { message?: unknown }).message === 'string'
-        ? (e as { message: string }).message
-        : 'Operation failed.';
+    const message = this.errors.toMessage(e, 'Operation failed.');
 
     this.loading.set(false);
     this.message.set('');
     this.error.set(message);
+    this.notifications.error(message);
   }
 
   submitReceive() {

@@ -7,6 +7,10 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 
 import { WarehousesService } from '../warehouses.service';
+import { FormErrorsComponent } from '../../../shared/ui/form-errors/form-errors.component';
+import { LoadingComponent } from '../../../shared/ui/loading/loading.component';
+import { NotificationService } from '../../../shared/ui/notifications/notification.service';
+import { ErrorMapper } from '../../../shared/utils/error-mapper.service';
 
 type DialogData =
   | { mode: 'create' }
@@ -21,7 +25,9 @@ type DialogData =
     MatDialogModule,
     MatButtonModule,
     MatFormFieldModule,
-    MatInputModule
+    MatInputModule,
+    FormErrorsComponent,
+    LoadingComponent
   ],
   templateUrl: './warehouse-upsert-dialog.component.html',
   styleUrl: './warehouse-upsert-dialog.component.scss',
@@ -38,7 +44,9 @@ export class WarehouseUpsertDialogComponent {
     private fb: FormBuilder,
     private warehouses: WarehousesService,
     private ref: MatDialogRef<WarehouseUpsertDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: DialogData
+    @Inject(MAT_DIALOG_DATA) public data: DialogData,
+    private notifications: NotificationService,
+    private errors: ErrorMapper
   ) {
     this.form = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
@@ -58,7 +66,7 @@ export class WarehouseUpsertDialogComponent {
         this.loading.set(false);
       },
       error: (e) => {
-        this.error.set(e?.message ?? 'Failed to load warehouse.');
+        this.error.set(this.errors.toMessage(e, 'Failed to load warehouse.'));
         this.loading.set(false);
       }
     });
@@ -73,15 +81,15 @@ export class WarehouseUpsertDialogComponent {
 
     if (this.data.mode === 'edit') {
       this.warehouses.update(this.data.warehouseId, payload).subscribe({
-        next: () => { this.loading.set(false); this.ref.close(true); },
-        error: (e) => { this.loading.set(false); this.error.set(e?.message ?? 'Save failed.'); }
+        next: () => { this.loading.set(false); this.notifications.success('Warehouse updated.'); this.ref.close(true); },
+        error: (e) => { this.loading.set(false); this.error.set(this.errors.toMessage(e, 'Save failed.')); }
       });
       return;
     }
 
     this.warehouses.create(payload).subscribe({
-      next: () => { this.loading.set(false); this.ref.close(true); },
-      error: (e) => { this.loading.set(false); this.error.set(e?.message ?? 'Save failed.'); }
+      next: () => { this.loading.set(false); this.notifications.success('Warehouse created.'); this.ref.close(true); },
+      error: (e) => { this.loading.set(false); this.error.set(this.errors.toMessage(e, 'Save failed.')); }
     });
   }
 

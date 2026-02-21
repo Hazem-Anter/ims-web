@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { environment } from '../../../environments/environment';
+import { HttpParams } from '@angular/common/http';
 import { PagedResult } from '../../shared/utils/paging';
+import { ApiService } from '../../core/http/api.service';
+import { API_ENDPOINTS } from '../../core/config/api.config';
 
 export interface WarehouseListItemDto {
   id: number;
@@ -34,79 +35,83 @@ export type LocationDetailsDto = LocationListItemDto;
 
 @Injectable({ providedIn: 'root' })
 export class WarehousesService {
-  private base = environment.apiBaseUrl;
-
-  constructor(private http: HttpClient) {}
+  constructor(private api: ApiService) {}
 
   list(search?: string, isActive?: boolean | null, page = 1, pageSize = 10) {
     let params = new HttpParams().set('page', page).set('pageSize', pageSize);
     if (search?.trim()) params = params.set('search', search.trim());
     if (isActive !== null && isActive !== undefined) params = params.set('isActive', isActive);
 
-    return this.http.get<PagedResult<WarehouseListItemDto>>(`${this.base}/api/warehouses`, { params });
+    return this.api.get<PagedResult<WarehouseListItemDto>>(API_ENDPOINTS.warehouses, { params });
   }
 
   getById(id: number) {
-    return this.http.get<WarehouseDetailsDto>(`${this.base}/api/warehouses/${id}`);
+    return this.api.get<WarehouseDetailsDto>(`${API_ENDPOINTS.warehouses}/${id}`);
   }
 
   create(req: CreateWarehouseRequest) {
-    return this.http.post<CreateWarehouseResponse>(`${this.base}/api/warehouses`, req);
+    return this.api.post<CreateWarehouseResponse>(API_ENDPOINTS.warehouses, req);
   }
 
   update(id: number, req: UpdateWarehouseRequest) {
-    return this.http.put<{ warehouseId: number }>(`${this.base}/api/warehouses/${id}`, req);
+    return this.api.put<{ warehouseId: number }>(`${API_ENDPOINTS.warehouses}/${id}`, req);
   }
 
   activate(id: number) {
-    return this.http.patch<void>(`${this.base}/api/warehouses/${id}/activate`, {});
+    return this.api.patch<void>(`${API_ENDPOINTS.warehouses}/${id}/activate`, {});
   }
 
   deactivate(id: number) {
-    return this.http.patch<void>(`${this.base}/api/warehouses/${id}/deactivate`, {});
+    return this.api.patch<void>(`${API_ENDPOINTS.warehouses}/${id}/deactivate`, {});
   }
 
-  listLocations(warehouseId: number, search?: string, isActive?: boolean | null) {
-    let params = new HttpParams();
+  listLocations(
+    warehouseId: number,
+    search?: string,
+    isActive?: boolean | null,
+    page = 1,
+    pageSize = 100
+  ) {
+    let params = new HttpParams().set('page', page).set('pageSize', pageSize);
     if (search?.trim()) params = params.set('search', search.trim());
     if (isActive !== null && isActive !== undefined) params = params.set('isActive', isActive);
 
-    return this.http.get<LocationListItemDto[]>(
-      `${this.base}/api/warehouses/${warehouseId}/locations`,
+    return this.api.get<PagedResult<LocationListItemDto>>(
+      `${API_ENDPOINTS.warehouses}/${warehouseId}/locations`,
       { params }
     );
   }
 
   getLocation(warehouseId: number, locationId: number) {
-    return this.http.get<LocationDetailsDto>(
-      `${this.base}/api/warehouses/${warehouseId}/locations/${locationId}`
+    return this.api.get<LocationDetailsDto>(
+      `${API_ENDPOINTS.warehouses}/${warehouseId}/locations/${locationId}`
     );
   }
 
   createLocation(warehouseId: number, code: string) {
-    return this.http.post<{ locationId: number }>(
-      `${this.base}/api/warehouses/${warehouseId}/locations`,
+    return this.api.post<{ locationId: number }>(
+      `${API_ENDPOINTS.warehouses}/${warehouseId}/locations`,
       { code }
     );
   }
 
   updateLocation(warehouseId: number, locationId: number, code: string) {
-    return this.http.put<{ locationId: number }>(
-      `${this.base}/api/warehouses/${warehouseId}/locations/${locationId}`,
+    return this.api.put<{ locationId: number }>(
+      `${API_ENDPOINTS.warehouses}/${warehouseId}/locations/${locationId}`,
       { code }
     );
   }
 
   activateLocation(warehouseId: number, locationId: number) {
-    return this.http.patch<void>(
-      `${this.base}/api/warehouses/${warehouseId}/locations/${locationId}/activate`,
+    return this.api.patch<void>(
+      `${API_ENDPOINTS.warehouses}/${warehouseId}/locations/${locationId}/activate`,
       {}
     );
   }
 
   deactivateLocation(warehouseId: number, locationId: number) {
-    return this.http.patch<void>(
-      `${this.base}/api/warehouses/${warehouseId}/locations/${locationId}/deactivate`,
+    return this.api.patch<void>(
+      `${API_ENDPOINTS.warehouses}/${warehouseId}/locations/${locationId}/deactivate`,
       {}
     );
   }

@@ -11,6 +11,12 @@
   font-size: 14px;
 }
 
+.loading-row {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0;
+}
+
 mat-dialog-content {
   padding-top: 8px;
 }

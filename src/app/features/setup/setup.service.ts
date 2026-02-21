@@ -1,16 +1,16 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { environment } from '../../../environments/environment';
+import { HttpHeaders } from '@angular/common/http';
 import { InitializeSystemRequest } from './setup.models';
+import { ApiService } from '../../core/http/api.service';
+import { API_ENDPOINTS } from '../../core/config/api.config';
 
 @Injectable({ providedIn: 'root' })
 export class SetupService {
-  private base = environment.apiBaseUrl;
-  constructor(private http: HttpClient) {}
+  constructor(private api: ApiService) {}
 
   initialize(req: InitializeSystemRequest, setupKey: string) {
     const key = setupKey?.trim();
     const headers = new HttpHeaders().set('X-Setup-Key', key);
-    return this.http.post<boolean>(`${this.base}/api/setup/initialize`, req, { headers });
+    return this.api.post<boolean>(API_ENDPOINTS.auth.setup, req, { headers });
   }
 }

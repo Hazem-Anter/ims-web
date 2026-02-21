@@ -17,6 +17,13 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { WarehousesService, WarehouseListItemDto } from '../warehouses.service';
 import { WarehouseUpsertDialogComponent } from '../warehouse-upsert-dialog/warehouse-upsert-dialog.component';
 import { PagedResult } from '../../../shared/utils/paging';
+import { NotificationService } from '../../../shared/ui/notifications/notification.service';
+import { ConfirmDialogComponent } from '../../../shared/ui/confirm-dialog/confirm-dialog.component';
+import { EmptyStateComponent } from '../../../shared/ui/empty-state/empty-state.component';
+import { LoadingComponent } from '../../../shared/ui/loading/loading.component';
+import { ErrorMapper } from '../../../shared/utils/error-mapper.service';
+import { debounceTime, distinctUntilChanged } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-warehouses-list',
@@ -33,7 +40,9 @@ import { PagedResult } from '../../../shared/utils/paging';
     MatSelectModule,
     MatChipsModule,
     MatDialogModule,
-    MatTooltipModule
+    MatTooltipModule,
+    EmptyStateComponent,
+    LoadingComponent
   ],
   templateUrl: './warehouses-list.component.html',
   styleUrl: './warehouses-list.component.scss',
@@ -44,6 +53,8 @@ export class WarehousesListComponent {
   private readonly warehouses = inject(WarehousesService);
   private readonly dialog = inject(MatDialog);
   private readonly router = inject(Router);
+  private readonly notifications = inject(NotificationService);
+  private readonly errors = inject(ErrorMapper);
   private activeLoadId = 0;
 
   readonly loading = signal(false);
@@ -63,6 +74,14 @@ export class WarehousesListComponent {
       search: [''],
       isActive: [null], // null = all
     });
+
+    this.filterForm.get('search')?.valueChanges
+      .pipe(debounceTime(350), distinctUntilChanged(), takeUntilDestroyed())
+      .subscribe(() => {
+        this.page.set(1);
+        this.load();
+      });
+
     this.load();
   }
 
@@ -85,7 +104,7 @@ export class WarehousesListComponent {
       error: (e) => {
         if (requestId !== this.activeLoadId) return;
         this.loading.set(false);
-        this.error.set(e?.message ?? 'Failed to load warehouses.');
+        this.error.set(this.errors.toMessage(e, 'Failed to load warehouses.'));
       }
     });
   }
@@ -125,19 +144,36 @@ export class WarehousesListComponent {
 
   toggleActive(row: WarehouseListItemDto) {
     this.loading.set(true);
-    const req = row.isActive
-      ? this.warehouses.deactivate(row.id)
-      : this.warehouses.activate(row.id);
-
-    req.subscribe({
-      next: () => {
-        this.loading.set(false);
-        this.load();
-      },
-      error: (e) => {
-        this.loading.set(false);
-        this.error.set(e?.message ?? 'Operation failed.');
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      width: '360px',
+      data: {
+        title: row.isActive ? 'Deactivate warehouse?' : 'Activate warehouse?',
+        message: `${row.name} (${row.code}) will be ${row.isActive ? 'hidden' : 'available'} for transactions.`,
+        confirmText: row.isActive ? 'Deactivate' : 'Activate'
       }
+    });
+
+    ref.afterClosed().subscribe((confirm) => {
+      if (!confirm) {
+        this.loading.set(false);
+        return;
+      }
+
+      const req = row.isActive
+        ? this.warehouses.deactivate(row.id)
+        : this.warehouses.activate(row.id);
+
+      req.subscribe({
+        next: () => {
+          this.loading.set(false);
+          this.notifications.success(row.isActive ? 'Warehouse deactivated.' : 'Warehouse activated.');
+          this.load();
+        },
+        error: (e) => {
+          this.loading.set(false);
+          this.error.set(this.errors.toMessage(e, 'Operation failed.'));
+        }
+      });
     });
   }
 

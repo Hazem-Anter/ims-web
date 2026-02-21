@@ -35,4 +35,22 @@ body {
   margin: 0;
   height: 100%;
 }
+
+.snack-success {
+  --mat-snack-bar-container-color: #0f5132;
+  --mat-snack-bar-button-color: #e8f5e9;
+  --mat-snack-bar-container-background-color: #d1fae5;
+}
+
+.snack-error {
+  --mat-snack-bar-container-color: #991b1b;
+  --mat-snack-bar-button-color: #fff5f5;
+  --mat-snack-bar-container-background-color: #fee2e2;
+}
+
+.snack-info {
+  --mat-snack-bar-container-color: #0f172a;
+  --mat-snack-bar-button-color: #e0f2fe;
+  --mat-snack-bar-container-background-color: #e0f2fe;
+}
 /* You can add global styles to this file, and also import other style files */
